@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>USDC: Risk &amp; Yield Comparison</title>
+  <title>USDC: Risk &amp; Yield Comparison on Morpho</title>
   <style>
     @import url('https://db.onlinewebfonts.com/c/9419cf3ea65d2c875025a63789ee57fa?family=FK+Grotesk+Variable');
 
@@ -11,41 +11,134 @@
 
     body {
       font-family: 'FK Grotesk Variable', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #DFE1E8;
+      background: #F0F2F8;
       color: #1d1d1f;
       min-height: 100vh;
-      padding: 48px 20px;
     }
 
-    .container {
-      max-width: 960px;
+    /* ── Hero ── */
+    .hero {
+      background: #1a1a2e;
+      padding: 48px 20px 56px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -40%;
+      left: -20%;
+      width: 140%;
+      height: 180%;
+      background: radial-gradient(ellipse at 50% 0%, rgba(36,112,255,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-inner {
+      max-width: 720px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 32px;
+    }
+
+    .hero-logo svg {
+      width: 32px;
+      height: 32px;
+    }
+
+    .hero-logo span {
+      font-size: 20px;
+      font-weight: 600;
+      color: #ffffff;
+      letter-spacing: -0.3px;
+    }
+
+    .hero-pill {
+      display: inline-block;
+      background: rgba(36, 112, 255, 0.15);
+      color: #6ba1ff;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      padding: 6px 16px;
+      border-radius: 100px;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 {
+      font-size: 36px;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1.2;
+      margin-bottom: 6px;
+      letter-spacing: -0.5px;
+    }
+
+    .hero h1 .blue { color: #2470ff; }
+
+    .hero-sub {
+      font-size: 16px;
+      color: rgba(255,255,255,0.5);
+      line-height: 1.5;
+      max-width: 480px;
       margin: 0 auto;
     }
 
-    /* ── Header ── */
-    .header {
-      text-align: center;
-      margin-bottom: 40px;
-    }
-
-    .header h1 {
-      font-size: 28px;
-      font-weight: 700;
-      color: #1d1d1f;
+    /* ── Container ── */
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 20px;
     }
 
     /* ── Section ── */
     .section {
-      margin-bottom: 32px;
+      margin-top: 40px;
     }
 
-    .section-label {
-      font-size: 13px;
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .section-pill {
+      display: inline-block;
+      background: rgba(36, 112, 255, 0.1);
+      color: #2470ff;
+      font-size: 11px;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 1px;
+      padding: 5px 12px;
+      border-radius: 100px;
+      white-space: nowrap;
+    }
+
+    .section-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1d1d1f;
+      letter-spacing: -0.3px;
+    }
+
+    .section-subtitle {
+      font-size: 14px;
       color: #86868b;
-      margin-bottom: 16px;
+      margin-top: -12px;
+      margin-bottom: 20px;
     }
 
     /* ── Yield Cards ── */
@@ -66,6 +159,11 @@
       display: flex;
       flex-direction: column;
       justify-content: center;
+      transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    .yield-card:hover {
+      box-shadow: 0 4px 24px rgba(0,0,0,0.06);
     }
 
     .yield-card .protocol-name {
@@ -109,32 +207,24 @@
       margin-bottom: 16px;
     }
 
-    /* Right fade */
     .vault-tabs-wrapper::after {
       content: '';
       position: absolute;
-      top: 0;
-      right: 0;
-      width: 48px;
-      height: 100%;
+      top: 0; right: 0;
+      width: 48px; height: 100%;
       background: linear-gradient(to right, rgba(255,255,255,0), #ffffff 85%);
       pointer-events: none;
       z-index: 1;
       transition: opacity 0.2s ease;
     }
 
-    .vault-tabs-wrapper.scrolled-end::after {
-      opacity: 0;
-    }
+    .vault-tabs-wrapper.scrolled-end::after { opacity: 0; }
 
-    /* Left fade */
     .vault-tabs-wrapper::before {
       content: '';
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 48px;
-      height: 100%;
+      top: 0; left: 0;
+      width: 48px; height: 100%;
       background: linear-gradient(to left, rgba(255,255,255,0), #ffffff 85%);
       pointer-events: none;
       z-index: 1;
@@ -142,9 +232,7 @@
       transition: opacity 0.2s ease;
     }
 
-    .vault-tabs-wrapper.scrolled-start::before {
-      opacity: 1;
-    }
+    .vault-tabs-wrapper.scrolled-start::before { opacity: 1; }
 
     .vault-tabs {
       display: flex;
@@ -190,14 +278,12 @@
       display: block;
     }
 
-    .morpho-link:hover {
-      opacity: 0.85;
-    }
+    .morpho-link:hover { opacity: 0.85; }
 
     /* ── Collateral Section ── */
     .collateral-row {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 2fr 3fr;
       gap: 16px;
     }
 
@@ -206,6 +292,11 @@
       border-radius: 16px;
       padding: 28px;
       border: 1px solid #e5e5ea;
+      transition: box-shadow 0.2s ease;
+    }
+
+    .collateral-card:hover {
+      box-shadow: 0 4px 24px rgba(0,0,0,0.06);
     }
 
     .collateral-card.morpho { border-color: rgba(36, 112, 255, 0.2); }
@@ -249,9 +340,7 @@
     }
 
     /* ── Asset List ── */
-    .asset-list {
-      list-style: none;
-    }
+    .asset-list { list-style: none; }
 
     .asset-item {
       display: flex;
@@ -272,15 +361,11 @@
       transition: background 0.15s ease;
     }
 
-    a.asset-item:hover {
-      background: #f5f5f7;
-    }
+    a.asset-item:hover { background: #f5f5f7; }
 
     a.asset-item + a.asset-item,
     a.asset-item + .asset-item,
-    .asset-item + a.asset-item {
-      border-top: none;
-    }
+    .asset-item + a.asset-item { border-top: none; }
 
     .asset-left {
       display: flex;
@@ -314,31 +399,137 @@
       color: #1d1d1f;
     }
 
+    /* ── Dropdown Toggle ── */
+    .dropdown-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      padding: 10px 0;
+      margin-top: 4px;
+      background: none;
+      border: 1px solid #e5e5ea;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      color: #86868b;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .dropdown-toggle:hover {
+      background: #f5f5f7;
+      color: #1d1d1f;
+    }
+
+    .dropdown-toggle .arrow {
+      font-size: 10px;
+      transition: transform 0.2s ease;
+    }
+
+    .dropdown-toggle.open .arrow { transform: rotate(180deg); }
+
+    .hidden-assets {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .hidden-assets.show { max-height: 2400px; }
+
     /* ── Morpho collateral transition ── */
     .morpho-collateral-inner {
       transition: opacity 0.25s ease;
     }
 
-    .morpho-collateral-inner.fading {
-      opacity: 0;
-    }
+    .morpho-collateral-inner.fading { opacity: 0; }
 
     /* ── Footer ── */
     .footer {
-      text-align: center;
-      margin-top: 40px;
+      background: #1a1a2e;
+      margin-top: 56px;
+      padding: 40px 20px;
+      position: relative;
     }
 
-    .footer p {
+    .footer-inner {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .footer-disclaimer {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .footer-disclaimer-icon {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: rgba(249, 115, 22, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1px;
+    }
+
+    .footer-disclaimer-icon span {
+      color: #f97316;
       font-size: 12px;
-      color: #aeaeb2;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .footer-disclaimer-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: rgba(255,255,255,0.7);
+      margin-bottom: 6px;
+    }
+
+    .footer-disclaimer p {
+      font-size: 12px;
+      color: rgba(255,255,255,0.35);
+      line-height: 1.6;
+    }
+
+    .footer-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      padding-top: 20px;
+    }
+
+    .footer-sources {
+      font-size: 12px;
+      color: rgba(255,255,255,0.35);
+    }
+
+    .footer-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .footer-logo svg {
+      width: 24px;
+      height: 24px;
+      opacity: 0.5;
     }
 
     /* ── Data Status ── */
     .data-status {
       font-size: 12px;
-      color: #aeaeb2;
-      margin-top: 6px;
+      color: rgba(255,255,255,0.35);
+      margin-top: 8px;
     }
 
     .data-status .dot {
@@ -352,28 +543,57 @@
 
     /* ── Responsive ── */
     @media (max-width: 720px) {
+      .hero h1 { font-size: 28px; }
+      .hero { padding: 36px 20px 44px; }
+
       .yield-row, .collateral-row {
         grid-template-columns: 1fr;
       }
 
-      .yield-card .apy {
-        font-size: 36px;
+      .yield-card .apy { font-size: 36px; }
+
+      .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .footer-bottom {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
       }
     }
   </style>
 </head>
 <body>
 
-<div class="container">
-
-  <!-- Header -->
-  <div class="header">
-    <h1>USDC: Risk &amp; Yield Comparison</h1>
+<!-- ── Hero ── -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-logo">
+      <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16 2L4 9v14l12 7 12-7V9L16 2z" fill="#2470ff" opacity="0.2"/>
+        <path d="M16 2L4 9l12 7 12-7L16 2z" fill="#2470ff" opacity="0.6"/>
+        <path d="M4 9v14l12 7V16L4 9z" fill="#2470ff" opacity="0.4"/>
+        <path d="M28 9v14l-12 7V16l12-7z" fill="#2470ff"/>
+      </svg>
+      <span>Morpho</span>
+    </div>
+    <div class="hero-pill">Risk & Yield Analysis</div>
+    <h1>USDC Comparison <span class="blue">on Morpho</span></h1>
+    <p class="hero-sub">Side-by-side yield rates and collateral risk profiles for USDC lending across Morpho vaults and Aave V3.</p>
   </div>
+</div>
+
+<div class="container">
 
   <!-- ── Section 1: Supply Yield ── -->
   <div class="section">
-    <div class="section-label">Supply Yield &middot; Real-Time Rates</div>
+    <div class="section-header">
+      <span class="section-pill">Market Overview</span>
+      <span class="section-title">Supply Yield</span>
+    </div>
     <div class="yield-row">
 
       <!-- Morpho carousel card -->
@@ -389,7 +609,7 @@
         </a>
       </div>
 
-      <!-- Aave card (static) -->
+      <!-- Aave card -->
       <a href="https://app.aave.com/reserve-overview/?underlyingAsset=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48&marketName=proto_mainnet_v3" class="yield-card aave" style="text-decoration: none; color: inherit;" target="_blank" rel="noopener">
         <div class="protocol-name">Aave V3</div>
         <div class="vault-label">USDC Market</div>
@@ -401,7 +621,10 @@
 
   <!-- ── Section 2: Collateral Backing ── -->
   <div class="section">
-    <div class="section-label">Collateral Backing</div>
+    <div class="section-header">
+      <span class="section-pill">Underwriting</span>
+      <span class="section-title">Collateral Backing</span>
+    </div>
     <div class="collateral-row">
 
       <!-- Morpho (dynamic) -->
@@ -489,8 +712,9 @@
           </a>
         </ul>
 
-        <!-- Remaining assets -->
-        <ul class="asset-list">
+        <!-- Hidden assets revealed by dropdown -->
+        <div class="hidden-assets" id="aaveMore">
+          <ul class="asset-list">
             <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x514910771af9ca656af840dff83e8264ecf986ca&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
               <div class="asset-left">
                 <span class="asset-dot" style="background: #2563eb"></span>
@@ -807,22 +1031,48 @@
               <span class="asset-pct">&lt;0.1%</span>
             </a>
           </ul>
+        </div>
+
+        <button class="dropdown-toggle" id="aaveToggle" onclick="toggleAave()">
+          <span id="toggleText">Show all 52 assets</span>
+          <span class="arrow" id="toggleArrow">&#9660;</span>
+        </button>
       </div>
 
     </div>
   </div>
 
-  <!-- Footer -->
-  <div class="footer">
-    <p>Sources: Morpho App, Aavescan, DefiLlama &middot; Rates update live when available</p>
-    <p class="data-status" id="dataStatus"><span class="dot" style="background:#aeaeb2"></span> Loading live data&hellip;</p>
-  </div>
+</div>
 
+<!-- ── Footer ── -->
+<div class="footer">
+  <div class="footer-inner">
+    <div class="footer-disclaimer">
+      <div class="footer-disclaimer-icon"><span>!</span></div>
+      <div>
+        <div class="footer-disclaimer-label">Disclaimer</div>
+        <p>This page is for informational purposes only. Yield rates are real-time estimates and may change. Collateral allocations reflect current vault state. This is not financial advice. Always do your own research before depositing funds into any DeFi protocol.</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>
+        <div class="footer-sources">Sources: Morpho App, Aavescan, DefiLlama &middot; Rates update live when available</div>
+        <div class="data-status" id="dataStatus"><span class="dot" style="background:#aeaeb2"></span> Loading live data&hellip;</div>
+      </div>
+      <div class="footer-logo">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 2L4 9v14l12 7 12-7V9L16 2z" fill="#ffffff" opacity="0.1"/>
+          <path d="M16 2L4 9l12 7 12-7L16 2z" fill="#ffffff" opacity="0.3"/>
+          <path d="M4 9v14l12 7V16L4 9z" fill="#ffffff" opacity="0.2"/>
+          <path d="M28 9v14l-12 7V16l12-7z" fill="#ffffff" opacity="0.4"/>
+        </svg>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
   // ── Vault Data ──
-  // Update APY and collateral figures from the Morpho App as rates change.
   const morphoVaults = [
     {
       name: "Steakhouse USDC",
@@ -943,22 +1193,18 @@
     currentVault = index;
     const v = morphoVaults[index];
 
-    // Update tabs
     document.querySelectorAll('.vault-tab').forEach((tab, i) => {
       tab.classList.toggle('active', i === index);
     });
 
-    // Scroll active tab into view
     const activeTab = document.querySelectorAll('.vault-tab')[index];
     activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
 
-    // Update yield card
     document.getElementById('morphoLink').href = v.url;
     document.getElementById('morphoVaultLabel').textContent = v.name;
     document.getElementById('morphoApy').textContent = v.apy;
     document.getElementById('morphoApySub').textContent = v.apySub;
 
-    // Animate collateral card
     const inner = document.getElementById('morphoCollateral');
     inner.classList.add('fading');
     setTimeout(() => {
@@ -969,16 +1215,13 @@
 
   // ── Render collateral ──
   function renderCollateral(v) {
-    // Badge
     document.getElementById('morphoBadge').textContent = v.badge;
 
-    // Allocation bar
     const bar = document.getElementById('morphoAllocBar');
     bar.innerHTML = v.collateral.map(a =>
       '<div class="seg" style="width:' + a.width + '%;background:' + a.color + '"></div>'
     ).join('');
 
-    // Asset list
     const list = document.getElementById('morphoAssetList');
     list.innerHTML = v.collateral.map(a => {
       const tag = a.url ? 'a' : 'li';
@@ -991,6 +1234,16 @@
         '<span class="asset-pct">' + a.pct + '</span>' +
       '</' + tag + '>';
     }).join('');
+  }
+
+  // ── Aave dropdown ──
+  function toggleAave() {
+    const el = document.getElementById('aaveMore');
+    const btn = document.getElementById('aaveToggle');
+    const text = document.getElementById('toggleText');
+    const isOpen = el.classList.toggle('show');
+    btn.classList.toggle('open', isOpen);
+    text.textContent = isOpen ? 'Show fewer' : 'Show all 52 assets';
   }
 
   // ── Init ──
@@ -1046,12 +1299,10 @@
     const vault = json.data.vaultByAddress;
     if (!vault || !vault.state) return false;
 
-    // Update APY
     if (vault.state.netApy != null) {
       morphoVaults[index].apy = (vault.state.netApy * 100).toFixed(2) + '%';
     }
 
-    // Update collateral allocation
     const alloc = vault.state.allocation;
     if (alloc && alloc.length > 0) {
       const totalUsd = alloc.reduce((s, a) => s + (parseFloat(a.supplyAssetsUsd) || 0), 0);
@@ -1100,7 +1351,6 @@
     let morphoOk = false;
     let aaveOk = false;
 
-    // Fetch all Morpho vaults in parallel
     try {
       const results = await Promise.allSettled(
         morphoVaults.map((v, i) => fetchMorphoVault(v.address, i))
@@ -1110,14 +1360,12 @@
       console.warn('[Morpho API]', e.message || e);
     }
 
-    // Fetch Aave rate
     try {
       aaveOk = await fetchAaveRate();
     } catch (e) {
       console.warn('[Aave/DeFi Llama]', e.message || e);
     }
 
-    // Re-render currently selected vault with live data
     if (morphoOk) {
       const v = morphoVaults[currentVault];
       document.getElementById('morphoApy').textContent = v.apy;
@@ -1125,7 +1373,6 @@
       renderCollateral(v);
     }
 
-    // Update status
     if (morphoOk && aaveOk) {
       setStatus('#22c55e', 'Live data \u00b7 Updated just now');
     } else if (morphoOk || aaveOk) {
@@ -1135,7 +1382,6 @@
     }
   }
 
-  // Render static data immediately, then overlay with live data
   fetchLiveData();
 </script>
 
