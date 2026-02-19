@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Integrator Notes</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h1>Integrator Notes</h1>
+            <p class="sidebar-subtitle">Weekly summaries from integrator calls</p>
+        </div>
+        <div class="week-list" id="week-list">
+            <div class="loading-weeks">Loading weeks...</div>
+        </div>
+    </nav>
+
+    <main class="content" id="content">
+        <div class="content-header">
+            <button class="menu-toggle" id="menu-toggle" aria-label="Toggle menu">
+                <span></span><span></span><span></span>
+            </button>
+            <div class="header-meta" id="header-meta"></div>
+        </div>
+
+        <article class="summary" id="summary">
+            <div class="empty-state" id="empty-state">
+                <div class="empty-icon">&#9672;</div>
+                <h2>Weekly Integrator Summary</h2>
+                <p>Select a week from the sidebar to view the summary, or wait for the next Monday's automated run.</p>
+                <div class="empty-details">
+                    <p>Every Monday, this site is automatically updated with a structured analysis of the previous week's integrator calls from Granola.</p>
+                </div>
+            </div>
+        </article>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
