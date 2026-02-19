@@ -1,19 +1,15 @@
 """
-Weekly meeting notes summarizer using the Anthropic Claude API.
+Claude-powered summarizer for integrator meeting notes.
 
-Takes a collection of meeting notes and produces a structured weekly summary
-focused on:
-- Main themes integrators are mentioning
-- Misunderstandings and friction points
-- Content ideas for marketing
+Produces a structured weekly summary focused on themes,
+misunderstandings, and content ideas for marketing.
 """
 
 import os
-from datetime import datetime
 
 import anthropic
 
-SUMMARY_SYSTEM_PROMPT = """\
+SYSTEM_PROMPT = """\
 You are an expert analyst who reads meeting notes from integrator calls \
 (conversations between a protocol team and external integrators/partners \
 who are building on top of or integrating with the protocol).
@@ -25,7 +21,7 @@ Be specific — cite concrete examples from the notes when possible. \
 Use the integrator/company name when available. \
 Do not fabricate information that isn't in the notes."""
 
-SUMMARY_USER_PROMPT_TEMPLATE = """\
+USER_PROMPT_TEMPLATE = """\
 Below are the meeting notes from integrator calls during the week of \
 {week_start} to {week_end}. There are {note_count} meeting notes in total.
 
@@ -78,38 +74,28 @@ Here are the meeting notes:
 
 
 def build_notes_content(notes: list[dict], extract_text_fn) -> str:
-    """
-    Format a list of note documents into a single text block for the LLM.
-
-    Args:
-        notes: List of document dicts from the Granola API.
-        extract_text_fn: Function to extract text from a document.
-
-    Returns:
-        Formatted string with all notes.
-    """
+    """Format note documents into a single text block for the LLM."""
     parts = []
     for i, note in enumerate(notes, 1):
         title = note.get("title", "Untitled Meeting")
         created = note.get("created_at") or note.get("createdAt", "Unknown date")
         participants = note.get("participants", [])
 
-        # Format participants
         if participants:
             if isinstance(participants[0], dict):
-                participant_names = [p.get("name", p.get("email", "Unknown")) for p in participants]
+                names = [p.get("name", p.get("email", "Unknown")) for p in participants]
             else:
-                participant_names = [str(p) for p in participants]
-            participants_str = ", ".join(participant_names)
+                names = [str(p) for p in participants]
+            participants_str = ", ".join(names)
         else:
             participants_str = "Not recorded"
 
         text = extract_text_fn(note)
 
-        # Include transcript if available
         transcript_section = ""
         if note.get("transcript"):
             from granola_client import format_transcript
+
             transcript_text = format_transcript(note["transcript"])
             if transcript_text:
                 transcript_section = f"\n### Transcript Excerpts\n{transcript_text}\n"
@@ -133,19 +119,7 @@ def generate_weekly_summary(
     week_end: str,
     model: str = "claude-sonnet-4-20250514",
 ) -> str:
-    """
-    Generate a weekly summary from meeting notes using Claude.
-
-    Args:
-        notes: List of document dicts from the Granola API.
-        extract_text_fn: Function to extract readable text from a document.
-        week_start: Human-readable start date (e.g., "2026-02-09").
-        week_end: Human-readable end date (e.g., "2026-02-15").
-        model: Anthropic model to use.
-
-    Returns:
-        Markdown-formatted weekly summary.
-    """
+    """Generate a weekly summary from meeting notes using Claude."""
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:
         raise RuntimeError(
@@ -156,39 +130,21 @@ def generate_weekly_summary(
     client = anthropic.Anthropic(api_key=api_key)
 
     notes_content = build_notes_content(notes, extract_text_fn)
-    note_count = len(notes)
 
-    user_prompt = SUMMARY_USER_PROMPT_TEMPLATE.format(
+    user_prompt = USER_PROMPT_TEMPLATE.format(
         week_start=week_start,
         week_end=week_end,
-        note_count=note_count,
+        note_count=len(notes),
         notes_content=notes_content,
     )
 
     message = client.messages.create(
         model=model,
         max_tokens=4096,
-        system=SUMMARY_SYSTEM_PROMPT,
+        system=SYSTEM_PROMPT,
         messages=[{"role": "user", "content": user_prompt}],
     )
 
-    # Extract text from the response
-    summary = ""
-    for block in message.content:
-        if hasattr(block, "text"):
-            summary += block.text
-
-    return summary
-
-
-def format_output(summary: str, week_start: str, week_end: str, note_count: int) -> str:
-    """Wrap the summary in a complete markdown document with metadata."""
-    now = datetime.now().strftime("%Y-%m-%d %H:%M")
-    return (
-        f"# Weekly Integrator Notes Summary\n"
-        f"**Week:** {week_start} to {week_end}\n"
-        f"**Generated:** {now}\n"
-        f"**Notes analyzed:** {note_count}\n\n"
-        f"---\n\n"
-        f"{summary}\n"
+    return "".join(
+        block.text for block in message.content if hasattr(block, "text")
     )
