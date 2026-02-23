@@ -16,83 +16,29 @@
       min-height: 100vh;
     }
 
-    /* ── Hero ── */
+    /* ── Header ── */
     .hero {
-      background: #1a1a2e;
-      padding: 48px 20px 56px;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .hero::before {
-      content: '';
-      position: absolute;
-      top: -40%;
-      left: -20%;
-      width: 140%;
-      height: 180%;
-      background: radial-gradient(ellipse at 50% 0%, rgba(36,112,255,0.08) 0%, transparent 70%);
-      pointer-events: none;
+      padding: 36px 20px 0;
     }
 
     .hero-inner {
-      max-width: 720px;
+      max-width: 960px;
       margin: 0 auto;
-      position: relative;
-      z-index: 1;
-    }
-
-    .hero-logo {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 32px;
-    }
-
-    .hero-logo svg {
-      width: 32px;
-      height: 32px;
-    }
-
-    .hero-logo span {
-      font-size: 20px;
-      font-weight: 600;
-      color: #ffffff;
-      letter-spacing: -0.3px;
-    }
-
-    .hero-pill {
-      display: inline-block;
-      background: rgba(36, 112, 255, 0.15);
-      color: #6ba1ff;
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 1.2px;
-      padding: 6px 16px;
-      border-radius: 100px;
-      margin-bottom: 20px;
     }
 
     .hero h1 {
-      font-size: 36px;
+      font-size: 24px;
       font-weight: 700;
-      color: #ffffff;
-      line-height: 1.2;
-      margin-bottom: 6px;
-      letter-spacing: -0.5px;
+      color: #1d1d1f;
+      line-height: 1.3;
+      letter-spacing: -0.3px;
     }
 
-    .hero h1 .blue { color: #2470ff; }
-
     .hero-sub {
-      font-size: 16px;
-      color: rgba(255,255,255,0.5);
+      font-size: 14px;
+      color: #86868b;
       line-height: 1.5;
-      max-width: 480px;
-      margin: 0 auto;
+      margin-top: 4px;
     }
 
     /* ── Container ── */
@@ -114,21 +60,8 @@
       margin-bottom: 20px;
     }
 
-    .section-pill {
-      display: inline-block;
-      background: rgba(36, 112, 255, 0.1);
-      color: #2470ff;
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      padding: 5px 12px;
-      border-radius: 100px;
-      white-space: nowrap;
-    }
-
     .section-title {
-      font-size: 22px;
+      font-size: 18px;
       font-weight: 700;
       color: #1d1d1f;
       letter-spacing: -0.3px;
@@ -399,45 +332,6 @@
       color: #1d1d1f;
     }
 
-    /* ── Dropdown Toggle ── */
-    .dropdown-toggle {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      width: 100%;
-      padding: 10px 0;
-      margin-top: 4px;
-      background: none;
-      border: 1px solid #e5e5ea;
-      border-radius: 10px;
-      font-family: inherit;
-      font-size: 13px;
-      font-weight: 500;
-      color: #86868b;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .dropdown-toggle:hover {
-      background: #f5f5f7;
-      color: #1d1d1f;
-    }
-
-    .dropdown-toggle .arrow {
-      font-size: 10px;
-      transition: transform 0.2s ease;
-    }
-
-    .dropdown-toggle.open .arrow { transform: rotate(180deg); }
-
-    .hidden-assets {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.3s ease;
-    }
-
-    .hidden-assets.show { max-height: 2400px; }
 
     /* ── Morpho collateral transition ── */
     .morpho-collateral-inner {
@@ -543,8 +437,7 @@
 
     /* ── Responsive ── */
     @media (max-width: 720px) {
-      .hero h1 { font-size: 28px; }
-      .hero { padding: 36px 20px 44px; }
+      .hero h1 { font-size: 20px; }
 
       .yield-row, .collateral-row {
         grid-template-columns: 1fr;
@@ -568,20 +461,10 @@
 </head>
 <body>
 
-<!-- ── Hero ── -->
+<!-- ── Header ── -->
 <div class="hero">
   <div class="hero-inner">
-    <div class="hero-logo">
-      <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M16 2L4 9v14l12 7 12-7V9L16 2z" fill="#2470ff" opacity="0.2"/>
-        <path d="M16 2L4 9l12 7 12-7L16 2z" fill="#2470ff" opacity="0.6"/>
-        <path d="M4 9v14l12 7V16L4 9z" fill="#2470ff" opacity="0.4"/>
-        <path d="M28 9v14l-12 7V16l12-7z" fill="#2470ff"/>
-      </svg>
-      <span>Morpho</span>
-    </div>
-    <div class="hero-pill">Risk & Yield Analysis</div>
-    <h1>USDC Comparison <span class="blue">on Morpho</span></h1>
+    <h1>USDC: Risk &amp; Yield Comparison on Morpho</h1>
     <p class="hero-sub">Side-by-side yield rates and collateral risk profiles for USDC lending across Morpho vaults and Aave V3.</p>
   </div>
 </div>
@@ -591,7 +474,6 @@
   <!-- ── Section 1: Supply Yield ── -->
   <div class="section">
     <div class="section-header">
-      <span class="section-pill">Market Overview</span>
       <span class="section-title">Supply Yield</span>
     </div>
     <div class="yield-row">
@@ -622,7 +504,6 @@
   <!-- ── Section 2: Collateral Backing ── -->
   <div class="section">
     <div class="section-header">
-      <span class="section-pill">Underwriting</span>
       <span class="section-title">Collateral Backing</span>
     </div>
     <div class="collateral-row">
@@ -659,8 +540,7 @@
           <div class="seg" style="width: 9.3%; background: #c7c7cc"></div>
         </div>
 
-        <!-- Top assets always visible -->
-        <ul class="asset-list" id="aaveTopAssets">
+        <ul class="asset-list" id="aaveAssetList">
           <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
             <div class="asset-left">
               <span class="asset-dot" style="background: #6366f1"></span>
@@ -710,333 +590,322 @@
             </div>
             <span class="asset-pct">3.3%</span>
           </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x514910771af9ca656af840dff83e8264ecf986ca&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #2563eb"></span>
+              <span class="asset-name">LINK <span class="asset-type">Chainlink</span></span>
+            </div>
+            <span class="asset-pct">2.5%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #9333ea"></span>
+              <span class="asset-name">AAVE <span class="asset-type">Aave Token</span></span>
+            </div>
+            <span class="asset-pct">2.0%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x6b175474e89094c44da98b954eedeac495271d0f&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #f59e0b"></span>
+              <span class="asset-name">DAI <span class="asset-type">MakerDAO</span></span>
+            </div>
+            <span class="asset-pct">1.8%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xae78736cd615f374d3085123a210448e74fc6393&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #06b6d4"></span>
+              <span class="asset-name">rETH <span class="asset-type">Rocket Pool ETH</span></span>
+            </div>
+            <span class="asset-pct">1.5%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xd533a949740bb3306d119cc777fa900ba034cd52&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #ef4444"></span>
+              <span class="asset-name">CRV <span class="asset-type">Curve</span></span>
+            </div>
+            <span class="asset-pct">0.8%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xbe9895146f7af43049ca1c1ae358b0541ea49704&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #3b82f6"></span>
+              <span class="asset-name">cbETH <span class="asset-type">Coinbase Staked ETH</span></span>
+            </div>
+            <span class="asset-pct">0.7%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #10b981"></span>
+              <span class="asset-name">GHO <span class="asset-type">Aave Stablecoin</span></span>
+            </div>
+            <span class="asset-pct">0.6%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x9d39a5de30e57443bff2a8307a4256c8797a3497&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #ec4899"></span>
+              <span class="asset-name">sUSDe <span class="asset-type">Staked Ethena USDe</span></span>
+            </div>
+            <span class="asset-pct">0.5%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x5f98805a4e8be255a32880fdec7f6728c6568ba0&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #6366f1"></span>
+              <span class="asset-name">LUSD <span class="asset-type">Liquity USD</span></span>
+            </div>
+            <span class="asset-pct">0.5%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x356b8d89c1e1239cbbb9de4815c39a1474d5ba7d&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #22c55e"></span>
+              <span class="asset-name">syrupUSDT <span class="asset-type">Maple syrupUSDT</span></span>
+            </div>
+            <span class="asset-pct">0.5%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xc18360217d8f7ab5e7c516566761ea12ce7f9d72&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #60a5fa"></span>
+              <span class="asset-name">ENS <span class="asset-type">Ethereum Name Service</span></span>
+            </div>
+            <span class="asset-pct">0.4%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #a78bfa"></span>
+              <span class="asset-name">SNX <span class="asset-type">Synthetix</span></span>
+            </div>
+            <span class="asset-pct">0.3%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #818cf8"></span>
+              <span class="asset-name">MKR <span class="asset-type">Maker</span></span>
+            </div>
+            <span class="asset-pct">0.3%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x8236a87084f8b84306f72007f36f2618a5634494&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #ea580c"></span>
+              <span class="asset-name">LBTC <span class="asset-type">Lombard BTC</span></span>
+            </div>
+            <span class="asset-pct">0.3%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xba100000625a3754423978a60c9317c58a424e3d&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #c084fc"></span>
+              <span class="asset-name">BAL <span class="asset-type">Balancer</span></span>
+            </div>
+            <span class="asset-pct">0.2%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x1f9840a85d5af5bf1d1762f925bdaddc4201f984&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #ff007a"></span>
+              <span class="asset-name">UNI <span class="asset-type">Uniswap</span></span>
+            </div>
+            <span class="asset-pct">0.2%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xdc035d45d973e3ec169d2276ddab16f1e407384f&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #10b981"></span>
+              <span class="asset-name">USDS <span class="asset-type">Sky Dollar</span></span>
+            </div>
+            <span class="asset-pct">0.2%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x5a98fcbea516cf06857215779fd812ca3bef1b32&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #00a3ff"></span>
+              <span class="asset-name">LDO <span class="asset-type">Lido DAO</span></span>
+            </div>
+            <span class="asset-pct">0.2%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xf1c9acdc66974dfb6decb12aa385b9cd01190e38&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #8b5cf6"></span>
+              <span class="asset-name">osETH <span class="asset-type">StakeWise ETH</span></span>
+            </div>
+            <span class="asset-pct">0.1%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x6c3ea9036406852006290770bedfcaba0e23a0e8&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #0070e0"></span>
+              <span class="asset-name">PYUSD <span class="asset-type">PayPal USD</span></span>
+            </div>
+            <span class="asset-pct">0.1%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x18084fba666a33d37592fa2633fd49a74dd93a88&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #e11d48"></span>
+              <span class="asset-name">tBTC <span class="asset-type">Threshold BTC</span></span>
+            </div>
+            <span class="asset-pct">0.1%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xf939e0a03fb07f59a73314e73794be0e57ac1b4e&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #ef4444"></span>
+              <span class="asset-name">crvUSD <span class="asset-type">Curve USD</span></span>
+            </div>
+            <span class="asset-pct">0.1%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xbf5495efe5db9ce00f80364c8b423567e58d2110&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #06b6d4"></span>
+              <span class="asset-name">ezETH <span class="asset-type">Renzo Restaked ETH</span></span>
+            </div>
+            <span class="asset-pct">0.1%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xa1290d69c65a6fe4df752f95823fae25cb99e5a7&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #059669"></span>
+              <span class="asset-name">rsETH <span class="asset-type">KelpDAO Restaked ETH</span></span>
+            </div>
+            <span class="asset-pct">0.1%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xd33526068d116ce69f19a9ee46f0bd304f21a51f&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #f97316"></span>
+              <span class="asset-name">RPL <span class="asset-type">Rocket Pool</span></span>
+            </div>
+            <span class="asset-pct">0.1%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xa35b1b31ce002fbf2058d22f30f95d405200a15b&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #3b82f6"></span>
+              <span class="asset-name">ETHx <span class="asset-type">Stader ETHx</span></span>
+            </div>
+            <span class="asset-pct">&lt;0.1%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x853d955acef822db058eb8505911ed77f175b99e&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #1d1d1f"></span>
+              <span class="asset-name">FRAX <span class="asset-type">Frax</span></span>
+            </div>
+            <span class="asset-pct">&lt;0.1%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x83f20f44975d03b1b09e64809b757c47f942beea&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #f59e0b"></span>
+              <span class="asset-name">sDAI <span class="asset-type">Savings DAI</span></span>
+            </div>
+            <span class="asset-pct">&lt;0.1%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x90d2af7d622ca3141efa4d8f1f24d86e5974cc8f&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #ec4899"></span>
+              <span class="asset-name">eUSDe <span class="asset-type">Ethena eUSDe</span></span>
+            </div>
+            <span class="asset-pct">&lt;0.1%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x657e8c867d8b37dcc18fa4caead9c45eb088c642&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #7c3aed"></span>
+              <span class="asset-name">eBTC <span class="asset-type">ether.fi BTC</span></span>
+            </div>
+            <span class="asset-pct">&lt;0.1%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xc96de26018a54d51c097160568752c4e3bd6c364&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #f97316"></span>
+              <span class="asset-name">FBTC <span class="asset-type">Fire Bitcoin</span></span>
+            </div>
+            <span class="asset-pct">&lt;0.1%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x1abaea1f7c830bd89acc67ec4af516284b1bc33c&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #2563eb"></span>
+              <span class="asset-name">EURC <span class="asset-type">Euro Coin</span></span>
+            </div>
+            <span class="asset-pct">&lt;0.1%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xdefa4e8a7bcba345f687a2f1456f5edd9ce97202&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #31cb9e"></span>
+              <span class="asset-name">KNC <span class="asset-type">Kyber Network</span></span>
+            </div>
+            <span class="asset-pct">&lt;0.1%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x111111111117dc0aa78b770fa6a738034120c302&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #94a3b8"></span>
+              <span class="asset-name">1INCH <span class="asset-type">1inch</span></span>
+            </div>
+            <span class="asset-pct">&lt;0.1%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xaf5191b0de278c7286d6c7cc6ab6bb8a73ba2cd6&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #6366f1"></span>
+              <span class="asset-name">STG <span class="asset-type">Stargate</span></span>
+            </div>
+            <span class="asset-pct">&lt;0.1%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x3432b6a60d23ca0dfca7761b7ab56459d9c964d0&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #1d1d1f"></span>
+              <span class="asset-name">FXS <span class="asset-type">Frax Share</span></span>
+            </div>
+            <span class="asset-pct">&lt;0.1%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xd11c452fc99cf405034ee446803b6f6c1f6d5ed8&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #059669"></span>
+              <span class="asset-name">tETH <span class="asset-type">Treehouse ETH</span></span>
+            </div>
+            <span class="asset-pct">&lt;0.1%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x8292bb45bf1ee4d140127049757c2e0ff06317ed&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #2563eb"></span>
+              <span class="asset-name">RLUSD <span class="asset-type">Ripple USD</span></span>
+            </div>
+            <span class="asset-pct">&lt;0.1%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x68749665ff8d2d112fa859aa293f07a622782f38&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #f59e0b"></span>
+              <span class="asset-name">XAUt <span class="asset-type">Tether Gold</span></span>
+            </div>
+            <span class="asset-pct">&lt;0.1%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xc139190f447e929f090edeb554d95abb8b18ac1c&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #ec4899"></span>
+              <span class="asset-name">USDtb <span class="asset-type">Ethena USDtb</span></span>
+            </div>
+            <span class="asset-pct">&lt;0.1%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xaca92e438df0b2401ff60da7e4337b687a2435da&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #059669"></span>
+              <span class="asset-name">mUSD <span class="asset-type">Mountain USD</span></span>
+            </div>
+            <span class="asset-pct">&lt;0.1%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xe343167631d89b6ffc58b88d6b7fb0228795491d&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #6366f1"></span>
+              <span class="asset-name">USDG <span class="asset-type">Global Dollar</span></span>
+            </div>
+            <span class="asset-pct">&lt;0.1%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xaebf0bb9f57e89260d57f31af34eb58657d96ce0&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #a78bfa"></span>
+              <span class="asset-name">PT-USDe-7MAY2026 <span class="asset-type">Pendle PT</span></span>
+            </div>
+            <span class="asset-pct">&lt;0.1%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x3de0ff76e8b528c092d47b9dac775931cef80f49&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #a78bfa"></span>
+              <span class="asset-name">PT-sUSDE-7MAY2026 <span class="asset-type">Pendle PT</span></span>
+            </div>
+            <span class="asset-pct">&lt;0.1%</span>
+          </a>
+          <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x9bf45ab47747f4b4dd09b3c2c73953484b4eb375&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
+            <div class="asset-left">
+              <span class="asset-dot" style="background: #a78bfa"></span>
+              <span class="asset-name">PT-srUSDe-2APR2026 <span class="asset-type">Pendle PT</span></span>
+            </div>
+            <span class="asset-pct">&lt;0.1%</span>
+          </a>
         </ul>
-
-        <!-- Hidden assets revealed by dropdown -->
-        <div class="hidden-assets" id="aaveMore">
-          <ul class="asset-list" id="aaveMoreList">
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x514910771af9ca656af840dff83e8264ecf986ca&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #2563eb"></span>
-                <span class="asset-name">LINK <span class="asset-type">Chainlink</span></span>
-              </div>
-              <span class="asset-pct">2.5%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #9333ea"></span>
-                <span class="asset-name">AAVE <span class="asset-type">Aave Token</span></span>
-              </div>
-              <span class="asset-pct">2.0%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x6b175474e89094c44da98b954eedeac495271d0f&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #f59e0b"></span>
-                <span class="asset-name">DAI <span class="asset-type">MakerDAO</span></span>
-              </div>
-              <span class="asset-pct">1.8%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xae78736cd615f374d3085123a210448e74fc6393&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #06b6d4"></span>
-                <span class="asset-name">rETH <span class="asset-type">Rocket Pool ETH</span></span>
-              </div>
-              <span class="asset-pct">1.5%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xd533a949740bb3306d119cc777fa900ba034cd52&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #ef4444"></span>
-                <span class="asset-name">CRV <span class="asset-type">Curve</span></span>
-              </div>
-              <span class="asset-pct">0.8%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xbe9895146f7af43049ca1c1ae358b0541ea49704&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #3b82f6"></span>
-                <span class="asset-name">cbETH <span class="asset-type">Coinbase Staked ETH</span></span>
-              </div>
-              <span class="asset-pct">0.7%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #10b981"></span>
-                <span class="asset-name">GHO <span class="asset-type">Aave Stablecoin</span></span>
-              </div>
-              <span class="asset-pct">0.6%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x5f98805a4e8be255a32880fdec7f6728c6568ba0&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #6366f1"></span>
-                <span class="asset-name">LUSD <span class="asset-type">Liquity USD</span></span>
-              </div>
-              <span class="asset-pct">0.5%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xc18360217d8f7ab5e7c516566761ea12ce7f9d72&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #60a5fa"></span>
-                <span class="asset-name">ENS <span class="asset-type">Ethereum Name Service</span></span>
-              </div>
-              <span class="asset-pct">0.4%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #a78bfa"></span>
-                <span class="asset-name">SNX <span class="asset-type">Synthetix</span></span>
-              </div>
-              <span class="asset-pct">0.3%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #818cf8"></span>
-                <span class="asset-name">MKR <span class="asset-type">Maker</span></span>
-              </div>
-              <span class="asset-pct">0.3%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xba100000625a3754423978a60c9317c58a424e3d&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #c084fc"></span>
-                <span class="asset-name">BAL <span class="asset-type">Balancer</span></span>
-              </div>
-              <span class="asset-pct">0.2%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x9d39a5de30e57443bff2a8307a4256c8797a3497&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #ec4899"></span>
-                <span class="asset-name">sUSDe <span class="asset-type">Staked Ethena USDe</span></span>
-              </div>
-              <span class="asset-pct">0.5%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x356b8d89c1e1239cbbb9de4815c39a1474d5ba7d&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #22c55e"></span>
-                <span class="asset-name">syrupUSDT <span class="asset-type">Maple syrupUSDT</span></span>
-              </div>
-              <span class="asset-pct">0.5%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x8236a87084f8b84306f72007f36f2618a5634494&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #ea580c"></span>
-                <span class="asset-name">LBTC <span class="asset-type">Lombard BTC</span></span>
-              </div>
-              <span class="asset-pct">0.3%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x1f9840a85d5af5bf1d1762f925bdaddc4201f984&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #ff007a"></span>
-                <span class="asset-name">UNI <span class="asset-type">Uniswap</span></span>
-              </div>
-              <span class="asset-pct">0.2%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xdc035d45d973e3ec169d2276ddab16f1e407384f&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #10b981"></span>
-                <span class="asset-name">USDS <span class="asset-type">Sky Dollar</span></span>
-              </div>
-              <span class="asset-pct">0.2%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x5a98fcbea516cf06857215779fd812ca3bef1b32&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #00a3ff"></span>
-                <span class="asset-name">LDO <span class="asset-type">Lido DAO</span></span>
-              </div>
-              <span class="asset-pct">0.2%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xf1c9acdc66974dfb6decb12aa385b9cd01190e38&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #8b5cf6"></span>
-                <span class="asset-name">osETH <span class="asset-type">StakeWise ETH</span></span>
-              </div>
-              <span class="asset-pct">0.1%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x6c3ea9036406852006290770bedfcaba0e23a0e8&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #0070e0"></span>
-                <span class="asset-name">PYUSD <span class="asset-type">PayPal USD</span></span>
-              </div>
-              <span class="asset-pct">0.1%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x18084fba666a33d37592fa2633fd49a74dd93a88&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #e11d48"></span>
-                <span class="asset-name">tBTC <span class="asset-type">Threshold BTC</span></span>
-              </div>
-              <span class="asset-pct">0.1%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xf939e0a03fb07f59a73314e73794be0e57ac1b4e&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #ef4444"></span>
-                <span class="asset-name">crvUSD <span class="asset-type">Curve USD</span></span>
-              </div>
-              <span class="asset-pct">0.1%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xbf5495efe5db9ce00f80364c8b423567e58d2110&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #06b6d4"></span>
-                <span class="asset-name">ezETH <span class="asset-type">Renzo Restaked ETH</span></span>
-              </div>
-              <span class="asset-pct">0.1%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xa1290d69c65a6fe4df752f95823fae25cb99e5a7&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #059669"></span>
-                <span class="asset-name">rsETH <span class="asset-type">KelpDAO Restaked ETH</span></span>
-              </div>
-              <span class="asset-pct">0.1%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xd33526068d116ce69f19a9ee46f0bd304f21a51f&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #f97316"></span>
-                <span class="asset-name">RPL <span class="asset-type">Rocket Pool</span></span>
-              </div>
-              <span class="asset-pct">0.1%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xa35b1b31ce002fbf2058d22f30f95d405200a15b&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #3b82f6"></span>
-                <span class="asset-name">ETHx <span class="asset-type">Stader ETHx</span></span>
-              </div>
-              <span class="asset-pct">&lt;0.1%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x853d955acef822db058eb8505911ed77f175b99e&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #1d1d1f"></span>
-                <span class="asset-name">FRAX <span class="asset-type">Frax</span></span>
-              </div>
-              <span class="asset-pct">&lt;0.1%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x83f20f44975d03b1b09e64809b757c47f942beea&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #f59e0b"></span>
-                <span class="asset-name">sDAI <span class="asset-type">Savings DAI</span></span>
-              </div>
-              <span class="asset-pct">&lt;0.1%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x90d2af7d622ca3141efa4d8f1f24d86e5974cc8f&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #ec4899"></span>
-                <span class="asset-name">eUSDe <span class="asset-type">Ethena eUSDe</span></span>
-              </div>
-              <span class="asset-pct">&lt;0.1%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x657e8c867d8b37dcc18fa4caead9c45eb088c642&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #7c3aed"></span>
-                <span class="asset-name">eBTC <span class="asset-type">ether.fi BTC</span></span>
-              </div>
-              <span class="asset-pct">&lt;0.1%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xc96de26018a54d51c097160568752c4e3bd6c364&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #f97316"></span>
-                <span class="asset-name">FBTC <span class="asset-type">Fire Bitcoin</span></span>
-              </div>
-              <span class="asset-pct">&lt;0.1%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x1abaea1f7c830bd89acc67ec4af516284b1bc33c&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #2563eb"></span>
-                <span class="asset-name">EURC <span class="asset-type">Euro Coin</span></span>
-              </div>
-              <span class="asset-pct">&lt;0.1%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xdefa4e8a7bcba345f687a2f1456f5edd9ce97202&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #31cb9e"></span>
-                <span class="asset-name">KNC <span class="asset-type">Kyber Network</span></span>
-              </div>
-              <span class="asset-pct">&lt;0.1%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x111111111117dc0aa78b770fa6a738034120c302&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #94a3b8"></span>
-                <span class="asset-name">1INCH <span class="asset-type">1inch</span></span>
-              </div>
-              <span class="asset-pct">&lt;0.1%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xaf5191b0de278c7286d6c7cc6ab6bb8a73ba2cd6&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #6366f1"></span>
-                <span class="asset-name">STG <span class="asset-type">Stargate</span></span>
-              </div>
-              <span class="asset-pct">&lt;0.1%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x3432b6a60d23ca0dfca7761b7ab56459d9c964d0&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #1d1d1f"></span>
-                <span class="asset-name">FXS <span class="asset-type">Frax Share</span></span>
-              </div>
-              <span class="asset-pct">&lt;0.1%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xd11c452fc99cf405034ee446803b6f6c1f6d5ed8&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #059669"></span>
-                <span class="asset-name">tETH <span class="asset-type">Treehouse ETH</span></span>
-              </div>
-              <span class="asset-pct">&lt;0.1%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x8292bb45bf1ee4d140127049757c2e0ff06317ed&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #2563eb"></span>
-                <span class="asset-name">RLUSD <span class="asset-type">Ripple USD</span></span>
-              </div>
-              <span class="asset-pct">&lt;0.1%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x68749665ff8d2d112fa859aa293f07a622782f38&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #f59e0b"></span>
-                <span class="asset-name">XAUt <span class="asset-type">Tether Gold</span></span>
-              </div>
-              <span class="asset-pct">&lt;0.1%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xc139190f447e929f090edeb554d95abb8b18ac1c&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #ec4899"></span>
-                <span class="asset-name">USDtb <span class="asset-type">Ethena USDtb</span></span>
-              </div>
-              <span class="asset-pct">&lt;0.1%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xaca92e438df0b2401ff60da7e4337b687a2435da&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #059669"></span>
-                <span class="asset-name">mUSD <span class="asset-type">Mountain USD</span></span>
-              </div>
-              <span class="asset-pct">&lt;0.1%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xe343167631d89b6ffc58b88d6b7fb0228795491d&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #6366f1"></span>
-                <span class="asset-name">USDG <span class="asset-type">Global Dollar</span></span>
-              </div>
-              <span class="asset-pct">&lt;0.1%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xaebf0bb9f57e89260d57f31af34eb58657d96ce0&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #a78bfa"></span>
-                <span class="asset-name">PT-USDe-7MAY2026 <span class="asset-type">Pendle PT</span></span>
-              </div>
-              <span class="asset-pct">&lt;0.1%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x3de0ff76e8b528c092d47b9dac775931cef80f49&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #a78bfa"></span>
-                <span class="asset-name">PT-sUSDE-7MAY2026 <span class="asset-type">Pendle PT</span></span>
-              </div>
-              <span class="asset-pct">&lt;0.1%</span>
-            </a>
-            <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x9bf45ab47747f4b4dd09b3c2c73953484b4eb375&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
-              <div class="asset-left">
-                <span class="asset-dot" style="background: #a78bfa"></span>
-                <span class="asset-name">PT-srUSDe-2APR2026 <span class="asset-type">Pendle PT</span></span>
-              </div>
-              <span class="asset-pct">&lt;0.1%</span>
-            </a>
-          </ul>
-        </div>
-
-        <button class="dropdown-toggle" id="aaveToggle" onclick="toggleAave()">
-          <span id="toggleText">Show all 52 assets</span>
-          <span class="arrow" id="toggleArrow">&#9660;</span>
-        </button>
       </div>
 
     </div>
@@ -1236,15 +1105,6 @@
     }).join('');
   }
 
-  // ── Aave dropdown ──
-  function toggleAave() {
-    const el = document.getElementById('aaveMore');
-    const btn = document.getElementById('aaveToggle');
-    const text = document.getElementById('toggleText');
-    const isOpen = el.classList.toggle('show');
-    btn.classList.toggle('open', isOpen);
-    text.textContent = isOpen ? 'Show fewer' : 'Show all ' + aaveTotalAssets + ' assets';
-  }
 
   // ── Init ──
   buildTabs();
@@ -1398,19 +1258,8 @@
     }
     document.getElementById('aaveAllocBar').innerHTML = barHtml;
 
-    // Top assets list
-    document.getElementById('aaveTopAssets').innerHTML = top.map(aaveAssetHtml).join('');
-
-    // Expanded assets list
-    document.getElementById('aaveMoreList').innerHTML = rest.map(aaveAssetHtml).join('');
-
-    // Reset toggle state
-    var moreEl = document.getElementById('aaveMore');
-    var toggleBtn = document.getElementById('aaveToggle');
-    var toggleText = document.getElementById('toggleText');
-    if (moreEl) moreEl.classList.remove('show');
-    if (toggleBtn) toggleBtn.classList.remove('open');
-    if (toggleText) toggleText.textContent = 'Show all ' + reserves.length + ' assets';
+    // All assets in one list
+    document.getElementById('aaveAssetList').innerHTML = reserves.map(aaveAssetHtml).join('');
   }
 
   async function fetchAaveCollateral() {
