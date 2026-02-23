@@ -465,7 +465,7 @@
 <div class="hero">
   <div class="hero-inner">
     <h1>USDC: Risk &amp; Yield Comparison on Morpho</h1>
-    <p class="hero-sub">Side-by-side yield rates and collateral risk profiles for USDC lending across Morpho vaults and Aave V3.</p>
+    <p class="hero-sub">Side-by-side yield rates and collateral risk profiles for USDC lending across Morpho Vaults and Aave V3.</p>
   </div>
 </div>
 
@@ -1372,14 +1372,23 @@
       }, 0);
       if (!totalUsd || totalUsd <= 0) throw new Error('Invalid total');
 
-      var reserves = nonUsdc
-        .map(function(r) {
-          return {
-            symbol: r.underlyingToken.symbol,
-            name: r.underlyingToken.name || r.underlyingToken.symbol,
+      // Deduplicate by symbol (some assets appear in multiple sub-reserves)
+      var bySymbol = {};
+      nonUsdc.forEach(function(r) {
+        var sym = r.underlyingToken.symbol;
+        if (!bySymbol[sym]) {
+          bySymbol[sym] = {
+            symbol: sym,
+            name: r.underlyingToken.name || sym,
             address: r.underlyingToken.address ? r.underlyingToken.address.toLowerCase() : '',
-            pct: (parseFloat(r.size.usdValue) || 0) / totalUsd * 100
+            usd: 0
           };
+        }
+        bySymbol[sym].usd += (parseFloat(r.size.usdValue) || 0);
+      });
+      var reserves = Object.keys(bySymbol).map(function(sym) {
+          var e = bySymbol[sym];
+          return { symbol: e.symbol, name: e.name, address: e.address, pct: e.usd / totalUsd * 100 };
         })
         .filter(function(r) { return r.pct > 0; })
         .sort(function(a, b) { return b.pct - a.pct; });
@@ -1400,14 +1409,23 @@
       var totalTvl = pools.reduce(function(s, p) { return s + (p.tvlUsd || 0); }, 0);
       if (!totalTvl) throw new Error('Zero TVL');
 
-      var reserves = pools
-        .map(function(p) {
-          return {
-            symbol: p.symbol,
-            name: p.symbol,
+      // Deduplicate by symbol
+      var bySymbol2 = {};
+      pools.forEach(function(p) {
+        var sym = p.symbol;
+        if (!bySymbol2[sym]) {
+          bySymbol2[sym] = {
+            symbol: sym,
+            name: sym,
             address: (p.underlyingTokens && p.underlyingTokens[0]) ? p.underlyingTokens[0].toLowerCase() : '',
-            pct: (p.tvlUsd || 0) / totalTvl * 100
+            tvl: 0
           };
+        }
+        bySymbol2[sym].tvl += (p.tvlUsd || 0);
+      });
+      var reserves = Object.keys(bySymbol2).map(function(sym) {
+          var e = bySymbol2[sym];
+          return { symbol: e.symbol, name: e.name, address: e.address, pct: e.tvl / totalTvl * 100 };
         })
         .filter(function(r) { return r.pct > 0; })
         .sort(function(a, b) { return b.pct - a.pct; });
