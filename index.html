@@ -643,10 +643,10 @@
       <div class="collateral-card aave">
         <div class="card-header">
           <h3>Aave V3</h3>
-          <span class="badge">52 assets &middot; Shared pool</span>
+          <span class="badge" id="aaveBadge">52 assets &middot; Shared pool</span>
         </div>
 
-        <div class="alloc-bar">
+        <div class="alloc-bar" id="aaveAllocBar">
           <div class="seg" style="width: 22%; background: #6366f1"></div>
           <div class="seg" style="width: 17.3%; background: #818cf8"></div>
           <div class="seg" style="width: 13%; background: #3b82f6"></div>
@@ -660,7 +660,7 @@
         </div>
 
         <!-- Top assets always visible -->
-        <ul class="asset-list">
+        <ul class="asset-list" id="aaveTopAssets">
           <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
             <div class="asset-left">
               <span class="asset-dot" style="background: #6366f1"></span>
@@ -714,7 +714,7 @@
 
         <!-- Hidden assets revealed by dropdown -->
         <div class="hidden-assets" id="aaveMore">
-          <ul class="asset-list">
+          <ul class="asset-list" id="aaveMoreList">
             <a class="asset-item" href="https://app.aave.com/reserve-overview/?underlyingAsset=0x514910771af9ca656af840dff83e8264ecf986ca&marketName=proto_mainnet_v3" target="_blank" rel="noopener">
               <div class="asset-left">
                 <span class="asset-dot" style="background: #2563eb"></span>
@@ -1243,7 +1243,7 @@
     const text = document.getElementById('toggleText');
     const isOpen = el.classList.toggle('show');
     btn.classList.toggle('open', isOpen);
-    text.textContent = isOpen ? 'Show fewer' : 'Show all 52 assets';
+    text.textContent = isOpen ? 'Show fewer' : 'Show all ' + aaveTotalAssets + ' assets';
   }
 
   // ── Init ──
@@ -1256,6 +1256,9 @@
   // ═══════════════════════════════════════════════════
 
   const MORPHO_API = 'https://blue-api.morpho.org/graphql';
+  const AAVE_API = 'https://api.v3.aave.com/graphql';
+  let llamaAavePools = null;
+  let aaveTotalAssets = 52;
 
   const COLLATERAL_COLORS = {
     'cbBTC': '#f59e0b', 'WBTC': '#f97316', 'wstETH': '#3b82f6',
@@ -1263,7 +1266,18 @@
     'DAI': '#f59e0b', 'USDC': '#2563eb', 'sDAI': '#f59e0b',
     'tBTC': '#e11d48', 'sUSDe': '#ec4899', 'USDe': '#ec4899',
     'rsETH': '#10b981', 'ezETH': '#06b6d4', 'osETH': '#8b5cf6',
-    'rETH': '#06b6d4', 'LBTC': '#f97316', 'sFRAX': '#f97316'
+    'rETH': '#06b6d4', 'LBTC': '#f97316', 'sFRAX': '#f97316',
+    'LINK': '#2563eb', 'AAVE': '#9333ea', 'CRV': '#ef4444',
+    'cbETH': '#3b82f6', 'GHO': '#10b981', 'LUSD': '#6366f1',
+    'ENS': '#60a5fa', 'SNX': '#a78bfa', 'MKR': '#818cf8',
+    'BAL': '#c084fc', 'UNI': '#ff007a', 'USDS': '#10b981',
+    'LDO': '#00a3ff', 'PYUSD': '#0070e0', 'crvUSD': '#ef4444',
+    'RPL': '#f97316', 'ETHx': '#3b82f6', 'FRAX': '#1d1d1f',
+    'eUSDe': '#ec4899', 'eBTC': '#7c3aed', 'FBTC': '#f97316',
+    'EURC': '#2563eb', 'KNC': '#31cb9e', '1INCH': '#94a3b8',
+    'STG': '#6366f1', 'FXS': '#1d1d1f', 'tETH': '#059669',
+    'RLUSD': '#2563eb', 'XAUt': '#f59e0b', 'USDtb': '#ec4899',
+    'mUSD': '#059669', 'USDG': '#6366f1', 'syrupUSDT': '#22c55e'
   };
 
   function setStatus(color, text) {
@@ -1337,13 +1351,146 @@
     const res = await fetch('https://yields.llama.fi/pools');
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const json = await res.json();
-    const pool = json.data.find(p =>
-      p.project === 'aave-v3' && p.symbol === 'USDC' && p.chain === 'Ethereum'
+    llamaAavePools = json.data.filter(p =>
+      p.project === 'aave-v3' && p.chain === 'Ethereum'
     );
+    const pool = llamaAavePools.find(p => p.symbol === 'USDC');
     if (pool && pool.apyBase != null) {
       document.querySelector('.yield-card.aave .apy').textContent = pool.apyBase.toFixed(2) + '%';
       return true;
     }
+    return false;
+  }
+
+  // ── Aave Collateral (live) ──
+
+  function aaveAssetHtml(r) {
+    var pctStr = r.pct < 0.1 ? '&lt;0.1%' : r.pct.toFixed(1) + '%';
+    var color = COLLATERAL_COLORS[r.symbol] || '#c7c7cc';
+    var href = r.address
+      ? 'https://app.aave.com/reserve-overview/?underlyingAsset=' + r.address + '&marketName=proto_mainnet_v3'
+      : '#';
+    return '<a class="asset-item" href="' + href + '" target="_blank" rel="noopener">' +
+      '<div class="asset-left">' +
+        '<span class="asset-dot" style="background:' + color + '"></span>' +
+        '<span class="asset-name">' + r.symbol + ' <span class="asset-type">' + (r.name || r.symbol) + '</span></span>' +
+      '</div>' +
+      '<span class="asset-pct">' + pctStr + '</span>' +
+    '</a>';
+  }
+
+  function renderAaveCollateral(reserves) {
+    var TOP_COUNT = 7;
+    var top = reserves.slice(0, TOP_COUNT);
+    var rest = reserves.slice(TOP_COUNT);
+    aaveTotalAssets = reserves.length;
+
+    // Badge
+    document.getElementById('aaveBadge').textContent = reserves.length + ' assets \u00b7 Shared pool';
+
+    // Allocation bar: top segments + "others" remainder
+    var othersWidth = rest.reduce(function(s, r) { return s + r.pct; }, 0);
+    var barHtml = top.map(function(r) {
+      return '<div class="seg" style="width:' + r.pct.toFixed(1) + '%;background:' + (COLLATERAL_COLORS[r.symbol] || '#c7c7cc') + '"></div>';
+    }).join('');
+    if (othersWidth > 0) {
+      barHtml += '<div class="seg" style="width:' + othersWidth.toFixed(1) + '%;background:#c7c7cc"></div>';
+    }
+    document.getElementById('aaveAllocBar').innerHTML = barHtml;
+
+    // Top assets list
+    document.getElementById('aaveTopAssets').innerHTML = top.map(aaveAssetHtml).join('');
+
+    // Expanded assets list
+    document.getElementById('aaveMoreList').innerHTML = rest.map(aaveAssetHtml).join('');
+
+    // Reset toggle state
+    var moreEl = document.getElementById('aaveMore');
+    var toggleBtn = document.getElementById('aaveToggle');
+    var toggleText = document.getElementById('toggleText');
+    if (moreEl) moreEl.classList.remove('show');
+    if (toggleBtn) toggleBtn.classList.remove('open');
+    if (toggleText) toggleText.textContent = 'Show all ' + reserves.length + ' assets';
+  }
+
+  async function fetchAaveCollateral() {
+    // Approach 1: Aave GraphQL API (free, no auth)
+    try {
+      var query = '{ markets { name chainId totalMarketSize supplyReserves { underlyingToken { symbol name address } size { usdValue } } } }';
+      var res = await fetch(AAVE_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: query })
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      var json = await res.json();
+      if (json.errors) throw new Error(json.errors[0].message);
+
+      // Find the Ethereum Core market (not Lido/EtherFi sub-markets)
+      var market = json.data.markets.find(function(m) {
+        var n = (m.name || '').toLowerCase();
+        return (m.chainId === 1 || n.includes('ethereum')) &&
+          !n.includes('lido') && !n.includes('etherfi') && !n.includes('plasma');
+      });
+      if (!market || !market.supplyReserves) throw new Error('Ethereum core market not found');
+
+      // Exclude USDC (this page is about USDC lending, not USDC as collateral)
+      var nonUsdc = market.supplyReserves.filter(function(r) {
+        return r.underlyingToken && r.underlyingToken.symbol !== 'USDC';
+      });
+      var totalUsd = nonUsdc.reduce(function(s, r) {
+        return s + (parseFloat(r.size.usdValue) || 0);
+      }, 0);
+      if (!totalUsd || totalUsd <= 0) throw new Error('Invalid total');
+
+      var reserves = nonUsdc
+        .map(function(r) {
+          return {
+            symbol: r.underlyingToken.symbol,
+            name: r.underlyingToken.name || r.underlyingToken.symbol,
+            address: r.underlyingToken.address ? r.underlyingToken.address.toLowerCase() : '',
+            pct: (parseFloat(r.size.usdValue) || 0) / totalUsd * 100
+          };
+        })
+        .filter(function(r) { return r.pct > 0; })
+        .sort(function(a, b) { return b.pct - a.pct; });
+
+      if (reserves.length > 0) {
+        renderAaveCollateral(reserves);
+        return true;
+      }
+    } catch(e) {
+      console.warn('[Aave GraphQL]', e.message || e);
+    }
+
+    // Approach 2: DeFi Llama pools (cached from APY fetch)
+    try {
+      if (!llamaAavePools || llamaAavePools.length === 0) throw new Error('No DeFi Llama pool data');
+
+      var pools = llamaAavePools.filter(function(p) { return p.symbol !== 'USDC'; });
+      var totalTvl = pools.reduce(function(s, p) { return s + (p.tvlUsd || 0); }, 0);
+      if (!totalTvl) throw new Error('Zero TVL');
+
+      var reserves = pools
+        .map(function(p) {
+          return {
+            symbol: p.symbol,
+            name: p.symbol,
+            address: (p.underlyingTokens && p.underlyingTokens[0]) ? p.underlyingTokens[0].toLowerCase() : '',
+            pct: (p.tvlUsd || 0) / totalTvl * 100
+          };
+        })
+        .filter(function(r) { return r.pct > 0; })
+        .sort(function(a, b) { return b.pct - a.pct; });
+
+      if (reserves.length > 0) {
+        renderAaveCollateral(reserves);
+        return true;
+      }
+    } catch(e) {
+      console.warn('[DeFi Llama collateral]', e.message || e);
+    }
+
     return false;
   }
 
@@ -1364,6 +1511,13 @@
       aaveOk = await fetchAaveRate();
     } catch (e) {
       console.warn('[Aave/DeFi Llama]', e.message || e);
+    }
+
+    try {
+      var collateralOk = await fetchAaveCollateral();
+      aaveOk = aaveOk || collateralOk;
+    } catch (e) {
+      console.warn('[Aave collateral]', e.message || e);
     }
 
     if (morphoOk) {
