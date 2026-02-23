@@ -216,7 +216,7 @@
     /* ── Collateral Section ── */
     .collateral-row {
       display: grid;
-      grid-template-columns: 2fr 3fr;
+      grid-template-columns: 1fr 1fr;
       gap: 16px;
     }
 
@@ -495,8 +495,8 @@
       <a href="https://app.aave.com/reserve-overview/?underlyingAsset=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48&marketName=proto_mainnet_v3" class="yield-card aave" style="text-decoration: none; color: inherit;" target="_blank" rel="noopener">
         <div class="protocol-name">Aave V3</div>
         <div class="vault-label">USDC Market</div>
-        <div class="apy">4.01%</div>
-        <div class="apy-sub">Supply APR</div>
+        <div class="apy" id="aaveApy">–</div>
+        <div class="apy-sub" id="aaveApySub">Loading live rate&hellip;</div>
       </a>
     </div>
   </div>
@@ -1120,25 +1120,70 @@
   let llamaAavePools = null;
   let aaveTotalAssets = 52;
 
-  const COLLATERAL_COLORS = {
-    'cbBTC': '#f59e0b', 'WBTC': '#f97316', 'wstETH': '#3b82f6',
-    'WETH': '#6366f1', 'weETH': '#818cf8', 'USDT': '#22c55e',
-    'DAI': '#f59e0b', 'USDC': '#2563eb', 'sDAI': '#f59e0b',
-    'tBTC': '#e11d48', 'sUSDe': '#ec4899', 'USDe': '#ec4899',
-    'rsETH': '#10b981', 'ezETH': '#06b6d4', 'osETH': '#8b5cf6',
-    'rETH': '#06b6d4', 'LBTC': '#f97316', 'sFRAX': '#f97316',
-    'LINK': '#2563eb', 'AAVE': '#9333ea', 'CRV': '#ef4444',
-    'cbETH': '#3b82f6', 'GHO': '#10b981', 'LUSD': '#6366f1',
-    'ENS': '#60a5fa', 'SNX': '#a78bfa', 'MKR': '#818cf8',
-    'BAL': '#c084fc', 'UNI': '#ff007a', 'USDS': '#10b981',
-    'LDO': '#00a3ff', 'PYUSD': '#0070e0', 'crvUSD': '#ef4444',
-    'RPL': '#f97316', 'ETHx': '#3b82f6', 'FRAX': '#1d1d1f',
-    'eUSDe': '#ec4899', 'eBTC': '#7c3aed', 'FBTC': '#f97316',
-    'EURC': '#2563eb', 'KNC': '#31cb9e', '1INCH': '#94a3b8',
-    'STG': '#6366f1', 'FXS': '#1d1d1f', 'tETH': '#059669',
-    'RLUSD': '#2563eb', 'XAUt': '#f59e0b', 'USDtb': '#ec4899',
-    'mUSD': '#059669', 'USDG': '#6366f1', 'syrupUSDT': '#22c55e'
+  // Canonical symbol display & color map (keyed by UPPERCASE for lookup)
+  const ASSET_META = {
+    'CBBTC':  { display: 'cbBTC',  name: 'Coinbase BTC',         color: '#f59e0b' },
+    'WBTC':   { display: 'WBTC',   name: 'Wrapped BTC',          color: '#f97316' },
+    'WSTETH': { display: 'wstETH', name: 'Lido Staked ETH',      color: '#3b82f6' },
+    'WETH':   { display: 'WETH',   name: 'Wrapped ETH',          color: '#6366f1' },
+    'WEETH':  { display: 'weETH',  name: 'EtherFi Restaked ETH', color: '#818cf8' },
+    'USDT':   { display: 'USDT',   name: 'Tether',               color: '#22c55e' },
+    'DAI':    { display: 'DAI',    name: 'MakerDAO',             color: '#f59e0b' },
+    'USDC':   { display: 'USDC',   name: 'USD Coin',             color: '#2563eb' },
+    'SDAI':   { display: 'sDAI',   name: 'Savings DAI',          color: '#f59e0b' },
+    'TBTC':   { display: 'tBTC',   name: 'Threshold BTC',        color: '#e11d48' },
+    'SUSDE':  { display: 'sUSDe',  name: 'Staked Ethena USDe',   color: '#ec4899' },
+    'USDE':   { display: 'USDe',   name: 'Ethena Synthetic',     color: '#ec4899' },
+    'RSETH':  { display: 'rsETH',  name: 'KelpDAO Restaked ETH', color: '#059669' },
+    'EZETH':  { display: 'ezETH',  name: 'Renzo Restaked ETH',   color: '#06b6d4' },
+    'OSETH':  { display: 'osETH',  name: 'StakeWise ETH',        color: '#8b5cf6' },
+    'RETH':   { display: 'rETH',   name: 'Rocket Pool ETH',      color: '#06b6d4' },
+    'LBTC':   { display: 'LBTC',   name: 'Lombard BTC',          color: '#f97316' },
+    'SFRAX':  { display: 'sFRAX',  name: 'Staked FRAX',          color: '#f97316' },
+    'LINK':   { display: 'LINK',   name: 'Chainlink',            color: '#2563eb' },
+    'AAVE':   { display: 'AAVE',   name: 'Aave Token',           color: '#9333ea' },
+    'CRV':    { display: 'CRV',    name: 'Curve',                color: '#ef4444' },
+    'CBETH':  { display: 'cbETH',  name: 'Coinbase Staked ETH',  color: '#3b82f6' },
+    'GHO':    { display: 'GHO',    name: 'Aave Stablecoin',      color: '#10b981' },
+    'LUSD':   { display: 'LUSD',   name: 'Liquity USD',          color: '#6366f1' },
+    'ENS':    { display: 'ENS',    name: 'Ethereum Name Service',color: '#60a5fa' },
+    'SNX':    { display: 'SNX',    name: 'Synthetix',            color: '#a78bfa' },
+    'MKR':    { display: 'MKR',    name: 'Maker',                color: '#818cf8' },
+    'BAL':    { display: 'BAL',    name: 'Balancer',             color: '#c084fc' },
+    'UNI':    { display: 'UNI',    name: 'Uniswap',              color: '#ff007a' },
+    'USDS':   { display: 'USDS',   name: 'Sky Dollar',           color: '#10b981' },
+    'LDO':    { display: 'LDO',    name: 'Lido DAO',             color: '#00a3ff' },
+    'PYUSD':  { display: 'PYUSD',  name: 'PayPal USD',           color: '#0070e0' },
+    'CRVUSD': { display: 'crvUSD', name: 'Curve USD',            color: '#ef4444' },
+    'RPL':    { display: 'RPL',    name: 'Rocket Pool',          color: '#f97316' },
+    'ETHX':   { display: 'ETHx',   name: 'Stader ETHx',          color: '#3b82f6' },
+    'FRAX':   { display: 'FRAX',   name: 'Frax',                 color: '#1d1d1f' },
+    'EUSDE':  { display: 'eUSDe',  name: 'Ethena eUSDe',         color: '#ec4899' },
+    'EBTC':   { display: 'eBTC',   name: 'ether.fi BTC',         color: '#7c3aed' },
+    'FBTC':   { display: 'FBTC',   name: 'Fire Bitcoin',         color: '#f97316' },
+    'EURC':   { display: 'EURC',   name: 'Euro Coin',            color: '#2563eb' },
+    'KNC':    { display: 'KNC',    name: 'Kyber Network',        color: '#31cb9e' },
+    '1INCH':  { display: '1INCH',  name: '1inch',                color: '#94a3b8' },
+    'STG':    { display: 'STG',    name: 'Stargate',             color: '#6366f1' },
+    'FXS':    { display: 'FXS',    name: 'Frax Share',           color: '#1d1d1f' },
+    'TETH':   { display: 'tETH',   name: 'Treehouse ETH',        color: '#059669' },
+    'RLUSD':  { display: 'RLUSD',  name: 'Ripple USD',           color: '#2563eb' },
+    'XAUT':   { display: 'XAUt',   name: 'Tether Gold',          color: '#f59e0b' },
+    'USDTB':  { display: 'USDtb',  name: 'Ethena USDtb',         color: '#ec4899' },
+    'MUSD':   { display: 'mUSD',   name: 'Mountain USD',         color: '#059669' },
+    'USDG':   { display: 'USDG',   name: 'Global Dollar',        color: '#6366f1' },
+    'SYRUPUSDT': { display: 'syrupUSDT', name: 'Maple syrupUSDT', color: '#22c55e' }
   };
+
+  function getAssetMeta(symbol) {
+    var key = (symbol || '').toUpperCase();
+    return ASSET_META[key] || { display: symbol, name: symbol, color: '#c7c7cc' };
+  }
+
+  // Legacy lookup by any-case symbol for Morpho collateral
+  function getColor(symbol) {
+    return getAssetMeta(symbol).color;
+  }
 
   function setStatus(color, text) {
     const el = document.getElementById('dataStatus');
@@ -1192,7 +1237,7 @@
               type: a.market.collateralAsset.name || sym,
               pct: pct < 0.1 ? '<0.1%' : pct.toFixed(1) + '%',
               width: Math.max(pct, 0.3),
-              color: COLLATERAL_COLORS[sym] || '#c7c7cc',
+              color: getColor(sym),
               url: key ? 'https://app.morpho.org/ethereum/market/' + key : null
             };
           })
@@ -1208,15 +1253,50 @@
   }
 
   async function fetchAaveRate() {
-    const res = await fetch('https://yields.llama.fi/pools');
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const json = await res.json();
-    llamaAavePools = json.data.filter(p =>
+    // Try Aave GraphQL API first
+    try {
+      var query = '{ markets { name chainId supplyReserves { underlyingToken { symbol } supplyRate } } }';
+      var res = await fetch(AAVE_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: query })
+      });
+      if (res.ok) {
+        var json = await res.json();
+        if (!json.errors && json.data && json.data.markets) {
+          var market = json.data.markets.find(function(m) {
+            var n = (m.name || '').toLowerCase();
+            return (m.chainId === 1 || n.includes('ethereum')) &&
+              !n.includes('lido') && !n.includes('etherfi') && !n.includes('plasma');
+          });
+          if (market && market.supplyReserves) {
+            var usdcReserve = market.supplyReserves.find(function(r) {
+              return r.underlyingToken && r.underlyingToken.symbol === 'USDC';
+            });
+            if (usdcReserve && usdcReserve.supplyRate != null) {
+              var rate = parseFloat(usdcReserve.supplyRate) * 100;
+              document.getElementById('aaveApy').textContent = rate.toFixed(2) + '%';
+              document.getElementById('aaveApySub').textContent = 'Supply APY (live)';
+              return true;
+            }
+          }
+        }
+      }
+    } catch(e) {
+      console.warn('[Aave GraphQL rate]', e.message || e);
+    }
+
+    // Fallback: DeFi Llama
+    const res2 = await fetch('https://yields.llama.fi/pools');
+    if (!res2.ok) throw new Error('HTTP ' + res2.status);
+    const json2 = await res2.json();
+    llamaAavePools = json2.data.filter(p =>
       p.project === 'aave-v3' && p.chain === 'Ethereum'
     );
     const pool = llamaAavePools.find(p => p.symbol === 'USDC');
     if (pool && pool.apyBase != null) {
-      document.querySelector('.yield-card.aave .apy').textContent = pool.apyBase.toFixed(2) + '%';
+      document.getElementById('aaveApy').textContent = pool.apyBase.toFixed(2) + '%';
+      document.getElementById('aaveApySub').textContent = 'Supply APY (live)';
       return true;
     }
     return false;
@@ -1226,14 +1306,14 @@
 
   function aaveAssetHtml(r) {
     var pctStr = r.pct < 0.1 ? '&lt;0.1%' : r.pct.toFixed(1) + '%';
-    var color = COLLATERAL_COLORS[r.symbol] || '#c7c7cc';
+    var meta = getAssetMeta(r.symbol);
     var href = r.address
       ? 'https://app.aave.com/reserve-overview/?underlyingAsset=' + r.address + '&marketName=proto_mainnet_v3'
       : '#';
     return '<a class="asset-item" href="' + href + '" target="_blank" rel="noopener">' +
       '<div class="asset-left">' +
-        '<span class="asset-dot" style="background:' + color + '"></span>' +
-        '<span class="asset-name">' + r.symbol + ' <span class="asset-type">' + (r.name || r.symbol) + '</span></span>' +
+        '<span class="asset-dot" style="background:' + meta.color + '"></span>' +
+        '<span class="asset-name">' + meta.display + ' <span class="asset-type">' + meta.name + '</span></span>' +
       '</div>' +
       '<span class="asset-pct">' + pctStr + '</span>' +
     '</a>';
@@ -1251,7 +1331,7 @@
     // Allocation bar: top segments + "others" remainder
     var othersWidth = rest.reduce(function(s, r) { return s + r.pct; }, 0);
     var barHtml = top.map(function(r) {
-      return '<div class="seg" style="width:' + r.pct.toFixed(1) + '%;background:' + (COLLATERAL_COLORS[r.symbol] || '#c7c7cc') + '"></div>';
+      return '<div class="seg" style="width:' + r.pct.toFixed(1) + '%;background:' + getAssetMeta(r.symbol).color + '"></div>';
     }).join('');
     if (othersWidth > 0) {
       barHtml += '<div class="seg" style="width:' + othersWidth.toFixed(1) + '%;background:#c7c7cc"></div>';
@@ -1374,6 +1454,12 @@
       document.getElementById('morphoApy').textContent = v.apy;
       document.getElementById('morphoApySub').textContent = v.apySub;
       renderCollateral(v);
+    }
+
+    // If Aave yield never loaded, show a fallback
+    if (!aaveOk && document.getElementById('aaveApy').textContent === '\u2013') {
+      document.getElementById('aaveApy').textContent = '4.01%';
+      document.getElementById('aaveApySub').textContent = 'Supply APY (cached)';
     }
 
     if (morphoOk && aaveOk) {
