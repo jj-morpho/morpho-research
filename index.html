@@ -487,7 +487,6 @@
           <div class="protocol-name">Morpho</div>
           <div class="vault-label" id="morphoVaultLabel">Steakhouse USDC</div>
           <div class="apy" id="morphoApy">5.87%</div>
-          <div class="apy-sub" id="morphoApySub">Net APY</div>
         </a>
       </div>
 
@@ -948,7 +947,6 @@
       address: "0xBEEF01735c132Ada46AA9aA4c54623cAA92A64CB",
       url: "https://app.morpho.org/ethereum/vault/0xBEEF01735c132Ada46AA9aA4c54623cAA92A64CB/steakhouse-usdc",
       apy: "5.87%",
-      apySub: "Net APY (post 25% perf. fee)",
       badge: "4 assets \u00b7 Isolated Markets",
       curator: "Steakhouse",
       collateral: [
@@ -963,7 +961,6 @@
       address: "0xdd0f28e19C1780eb6396170735D45153D261490d",
       url: "https://app.morpho.org/ethereum/vault/0xdd0f28e19C1780eb6396170735D45153D261490d/gauntlet-usdc-prime",
       apy: "5.41%",
-      apySub: "Net APY",
       badge: "5 assets \u00b7 Isolated Markets",
       curator: "Gauntlet",
       collateral: [
@@ -979,7 +976,6 @@
       address: "0xbeef088055857739C12CD3765F20b7679Def0f51",
       url: "https://app.morpho.org/ethereum/vault/0xbeef088055857739C12CD3765F20b7679Def0f51/steakhouse-prime-instant",
       apy: "5.14%",
-      apySub: "Net APY (post 15% perf. fee)",
       badge: "4 assets \u00b7 Isolated Markets",
       curator: "Steakhouse",
       collateral: [
@@ -994,7 +990,6 @@
       address: "0xBEeFFF209270748ddd194831b3fa287a5386f5bC",
       url: "https://app.morpho.org/ethereum/vault/0xBEeFFF209270748ddd194831b3fa287a5386f5bC/smokehouse-usdc",
       apy: "–",
-      apySub: "Loading\u2026",
       badge: "Loading\u2026",
       curator: "Steakhouse",
       collateral: []
@@ -1004,7 +999,6 @@
       address: "0xc582F04d8a82795aa2Ff9c8bb4c1c889fe7b754e",
       url: "https://app.morpho.org/ethereum/vault/0xc582F04d8a82795aa2Ff9c8bb4c1c889fe7b754e/gauntlet-usdc-frontier",
       apy: "–",
-      apySub: "Loading\u2026",
       badge: "Loading\u2026",
       curator: "Gauntlet",
       collateral: []
@@ -1053,7 +1047,6 @@
     document.getElementById('morphoLink').href = v.url;
     document.getElementById('morphoVaultLabel').textContent = v.name;
     document.getElementById('morphoApy').textContent = v.apy;
-    document.getElementById('morphoApySub').textContent = v.apySub;
 
     const inner = document.getElementById('morphoCollateral');
     inner.classList.add('fading');
@@ -1256,56 +1249,6 @@
     return true;
   }
 
-  async function fetchAaveRate() {
-    // Try Aave GraphQL API first
-    try {
-      var query = '{ markets { name chainId supplyReserves { underlyingToken { symbol } supplyRate } } }';
-      var res = await fetch(AAVE_API, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: query })
-      });
-      if (res.ok) {
-        var json = await res.json();
-        if (!json.errors && json.data && json.data.markets) {
-          var market = json.data.markets.find(function(m) {
-            var n = (m.name || '').toLowerCase();
-            return (m.chainId === 1 || n.includes('ethereum')) &&
-              !n.includes('lido') && !n.includes('etherfi') && !n.includes('plasma');
-          });
-          if (market && market.supplyReserves) {
-            var usdcReserve = market.supplyReserves.find(function(r) {
-              return r.underlyingToken && r.underlyingToken.symbol === 'USDC';
-            });
-            if (usdcReserve && usdcReserve.supplyRate != null) {
-              var rate = parseFloat(usdcReserve.supplyRate) * 100;
-              document.getElementById('aaveApy').textContent = rate.toFixed(2) + '%';
-              document.getElementById('aaveApySub').textContent = 'Supply APY (live)';
-              return true;
-            }
-          }
-        }
-      }
-    } catch(e) {
-      console.warn('[Aave GraphQL rate]', e.message || e);
-    }
-
-    // Fallback: DeFi Llama
-    const res2 = await fetch('https://yields.llama.fi/pools');
-    if (!res2.ok) throw new Error('HTTP ' + res2.status);
-    const json2 = await res2.json();
-    llamaAavePools = json2.data.filter(p =>
-      p.project === 'aave-v3' && p.chain === 'Ethereum'
-    );
-    const pool = llamaAavePools.find(p => p.symbol === 'USDC');
-    if (pool && pool.apyBase != null) {
-      document.getElementById('aaveApy').textContent = pool.apyBase.toFixed(2) + '%';
-      document.getElementById('aaveApySub').textContent = 'Supply APY (live)';
-      return true;
-    }
-    return false;
-  }
-
   // ── Aave Collateral (live) ──
 
   function aaveAssetHtml(r) {
@@ -1346,20 +1289,81 @@
     document.getElementById('aaveAssetList').innerHTML = reserves.map(aaveAssetHtml).join('');
   }
 
-  async function fetchAaveCollateral() {
-    // Approach 1: Aave GraphQL API (free, no auth)
+  function fetchWithTimeout(url, opts, ms) {
+    ms = ms || 5000;
+    var ctrl = new AbortController();
+    var timer = setTimeout(function() { ctrl.abort(); }, ms);
+    opts = Object.assign({}, opts, { signal: ctrl.signal });
+    return fetch(url, opts).finally(function() { clearTimeout(timer); });
+  }
+
+  async function fetchAaveRateWithTimeout() {
+    // Try Aave GraphQL with a 5s timeout, then fall back to DeFi Llama
     try {
-      var query = '{ markets { name chainId totalMarketSize supplyReserves { underlyingToken { symbol name address } size { usdValue } } } }';
-      var res = await fetch(AAVE_API, {
+      var query = '{ markets { name chainId supplyReserves { underlyingToken { symbol } supplyRate } } }';
+      var res = await fetchWithTimeout(AAVE_API, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: query })
+      }, 5000);
+      if (res.ok) {
+        var json = await res.json();
+        if (!json.errors && json.data && json.data.markets) {
+          var market = json.data.markets.find(function(m) {
+            var n = (m.name || '').toLowerCase();
+            return (m.chainId === 1 || n.includes('ethereum')) &&
+              !n.includes('lido') && !n.includes('etherfi') && !n.includes('plasma');
+          });
+          if (market && market.supplyReserves) {
+            var usdcReserve = market.supplyReserves.find(function(r) {
+              return r.underlyingToken && r.underlyingToken.symbol === 'USDC';
+            });
+            if (usdcReserve && usdcReserve.supplyRate != null) {
+              var rate = parseFloat(usdcReserve.supplyRate) * 100;
+              document.getElementById('aaveApy').textContent = rate.toFixed(2) + '%';
+              document.getElementById('aaveApySub').textContent = 'Supply APY (live)';
+              return true;
+            }
+          }
+        }
+      }
+    } catch(e) {
+      console.warn('[Aave GraphQL rate]', e.message || e);
+    }
+
+    // Fallback: DeFi Llama
+    try {
+      var res2 = await fetchWithTimeout('https://yields.llama.fi/pools', {}, 8000);
+      if (!res2.ok) throw new Error('HTTP ' + res2.status);
+      var json2 = await res2.json();
+      llamaAavePools = json2.data.filter(function(p) {
+        return p.project === 'aave-v3' && p.chain === 'Ethereum';
       });
+      var pool = llamaAavePools.find(function(p) { return p.symbol === 'USDC'; });
+      if (pool && pool.apyBase != null) {
+        document.getElementById('aaveApy').textContent = pool.apyBase.toFixed(2) + '%';
+        document.getElementById('aaveApySub').textContent = 'Supply APY (live)';
+        return true;
+      }
+    } catch(e) {
+      console.warn('[DeFi Llama rate]', e.message || e);
+    }
+    return false;
+  }
+
+  async function fetchAaveCollateralWithTimeout() {
+    // Try Aave GraphQL with 5s timeout
+    try {
+      var query = '{ markets { name chainId totalMarketSize supplyReserves { underlyingToken { symbol name address } size { usdValue } } } }';
+      var res = await fetchWithTimeout(AAVE_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: query })
+      }, 5000);
       if (!res.ok) throw new Error('HTTP ' + res.status);
       var json = await res.json();
       if (json.errors) throw new Error(json.errors[0].message);
 
-      // Find the Ethereum Core market (not Lido/EtherFi sub-markets)
       var market = json.data.markets.find(function(m) {
         var n = (m.name || '').toLowerCase();
         return (m.chainId === 1 || n.includes('ethereum')) &&
@@ -1367,7 +1371,6 @@
       });
       if (!market || !market.supplyReserves) throw new Error('Ethereum core market not found');
 
-      // Exclude USDC (this page is about USDC lending, not USDC as collateral)
       var nonUsdc = market.supplyReserves.filter(function(r) {
         return r.underlyingToken && r.underlyingToken.symbol !== 'USDC';
       });
@@ -1376,7 +1379,6 @@
       }, 0);
       if (!totalUsd || totalUsd <= 0) throw new Error('Invalid total');
 
-      // Deduplicate by symbol (some assets appear in multiple sub-reserves)
       var bySymbol = {};
       nonUsdc.forEach(function(r) {
         var sym = r.underlyingToken.symbol;
@@ -1402,18 +1404,24 @@
         return true;
       }
     } catch(e) {
-      console.warn('[Aave GraphQL]', e.message || e);
+      console.warn('[Aave GraphQL collateral]', e.message || e);
     }
 
-    // Approach 2: DeFi Llama pools (cached from APY fetch)
+    // Fallback: DeFi Llama pools (may already be cached from rate fetch)
     try {
-      if (!llamaAavePools || llamaAavePools.length === 0) throw new Error('No DeFi Llama pool data');
+      if (!llamaAavePools || llamaAavePools.length === 0) {
+        var res2 = await fetchWithTimeout('https://yields.llama.fi/pools', {}, 8000);
+        if (!res2.ok) throw new Error('HTTP ' + res2.status);
+        var json2 = await res2.json();
+        llamaAavePools = json2.data.filter(function(p) {
+          return p.project === 'aave-v3' && p.chain === 'Ethereum';
+        });
+      }
 
       var pools = llamaAavePools.filter(function(p) { return p.symbol !== 'USDC'; });
       var totalTvl = pools.reduce(function(s, p) { return s + (p.tvlUsd || 0); }, 0);
       if (!totalTvl) throw new Error('Zero TVL');
 
-      // Deduplicate by symbol
       var bySymbol2 = {};
       pools.forEach(function(p) {
         var sym = p.symbol;
@@ -1427,15 +1435,15 @@
         }
         bySymbol2[sym].tvl += (p.tvlUsd || 0);
       });
-      var reserves = Object.keys(bySymbol2).map(function(sym) {
+      var reserves2 = Object.keys(bySymbol2).map(function(sym) {
           var e = bySymbol2[sym];
           return { symbol: e.symbol, name: e.name, address: e.address, pct: e.tvl / totalTvl * 100 };
         })
         .filter(function(r) { return r.pct > 0; })
         .sort(function(a, b) { return b.pct - a.pct; });
 
-      if (reserves.length > 0) {
-        renderAaveCollateral(reserves);
+      if (reserves2.length > 0) {
+        renderAaveCollateral(reserves2);
         return true;
       }
     } catch(e) {
@@ -1446,40 +1454,24 @@
   }
 
   async function fetchLiveData() {
-    let morphoOk = false;
-    let aaveOk = false;
+    // Run ALL fetches in parallel instead of sequentially
+    var [morphoResults, aaveRateOk, aaveCollateralOk] = await Promise.all([
+      Promise.allSettled(morphoVaults.map(function(v, i) { return fetchMorphoVault(v.address, i); })),
+      fetchAaveRateWithTimeout().catch(function(e) { console.warn('[Aave rate]', e); return false; }),
+      fetchAaveCollateralWithTimeout().catch(function(e) { console.warn('[Aave collateral]', e); return false; })
+    ]);
 
-    try {
-      const results = await Promise.allSettled(
-        morphoVaults.map((v, i) => fetchMorphoVault(v.address, i))
-      );
-      morphoOk = results.some(r => r.status === 'fulfilled' && r.value);
-    } catch (e) {
-      console.warn('[Morpho API]', e.message || e);
-    }
-
-    try {
-      aaveOk = await fetchAaveRate();
-    } catch (e) {
-      console.warn('[Aave/DeFi Llama]', e.message || e);
-    }
-
-    try {
-      var collateralOk = await fetchAaveCollateral();
-      aaveOk = aaveOk || collateralOk;
-    } catch (e) {
-      console.warn('[Aave collateral]', e.message || e);
-    }
+    var morphoOk = morphoResults.some(function(r) { return r.status === 'fulfilled' && r.value; });
+    var aaveOk = aaveRateOk || aaveCollateralOk;
 
     if (morphoOk) {
-      const v = morphoVaults[currentVault];
+      var v = morphoVaults[currentVault];
       document.getElementById('morphoApy').textContent = v.apy;
-      document.getElementById('morphoApySub').textContent = v.apySub;
-      renderCollateral(v);
+        renderCollateral(v);
     }
 
     // If Aave yield never loaded, show a fallback
-    if (!aaveOk && document.getElementById('aaveApy').textContent === '\u2013') {
+    if (!aaveRateOk && document.getElementById('aaveApy').textContent === '\u2013') {
       document.getElementById('aaveApy').textContent = '4.01%';
       document.getElementById('aaveApySub').textContent = 'Supply APY (cached)';
     }
