@@ -1153,12 +1153,35 @@
     'USDTB':  { display: 'USDtb',  name: 'Ethena USDtb',         color: '#ec4899' },
     'MUSD':   { display: 'mUSD',   name: 'Mountain USD',         color: '#059669' },
     'USDG':   { display: 'USDG',   name: 'Global Dollar',        color: '#6366f1' },
-    'SYRUPUSDT': { display: 'syrupUSDT', name: 'Maple syrupUSDT', color: '#22c55e' }
+    'SYRUPUSDT': { display: 'syrupUSDT', name: 'Maple syrupUSDT', color: '#22c55e' },
+    'SYRUPUSDC': { display: 'syrupUSDC', name: 'Maple syrupUSDC', color: '#22c55e' },
+    'SDEUSD':    { display: 'sdeUSD',    name: 'Elixir sdeUSD',   color: '#7c3aed' },
+    'MF-ONE':    { display: 'mF-ONE',    name: 'Midas Fasanara',  color: '#0ea5e9' },
+    'MFONE':     { display: 'mF-ONE',    name: 'Midas Fasanara',  color: '#0ea5e9' },
+    'MTBILL':    { display: 'mTBILL',    name: 'Midas T-Bills',   color: '#0284c7' },
+    'WEETHS':    { display: 'weETHs',    name: 'EtherFi Staked weETH', color: '#818cf8' },
+    'USUALUSDC++': { display: 'USUALUSDC++', name: 'Usual USDC++', color: '#6366f1' }
   };
+
+  function hashColor(str) {
+    var hash = 0;
+    for (var i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    var palette = ['#6366f1','#818cf8','#3b82f6','#06b6d4','#0ea5e9','#10b981','#22c55e','#f59e0b','#f97316','#ef4444','#ec4899','#8b5cf6','#7c3aed','#059669','#e11d48','#2563eb'];
+    return palette[Math.abs(hash) % palette.length];
+  }
 
   function getAssetMeta(symbol) {
     var key = (symbol || '').toUpperCase();
-    return ASSET_META[key] || { display: symbol, name: symbol, color: '#c7c7cc' };
+    if (ASSET_META[key]) return ASSET_META[key];
+    // Try matching Pendle PT tokens: PT-XXX-DATE -> look up XXX
+    var ptMatch = key.match(/^PT-([A-Z]+)/);
+    if (ptMatch && ASSET_META[ptMatch[1]]) {
+      var base = ASSET_META[ptMatch[1]];
+      return { display: symbol, name: 'Pendle PT ' + base.display, color: base.color };
+    }
+    return { display: symbol, name: symbol, color: hashColor(key) };
   }
 
   // Legacy lookup by any-case symbol for Morpho collateral
