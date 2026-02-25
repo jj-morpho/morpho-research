@@ -1184,7 +1184,7 @@
     const query = `{
       vaultByAddress(address: "${address}", chainId: 1) {
         state {
-          netApy
+          apy
           allocation {
             supplyAssetsUsd
             market {
@@ -1208,8 +1208,8 @@
     const vault = json.data.vaultByAddress;
     if (!vault || !vault.state) return false;
 
-    if (vault.state.netApy != null) {
-      morphoVaults[index].apy = (vault.state.netApy * 100).toFixed(2) + '%';
+    if (vault.state.apy != null) {
+      morphoVaults[index].apy = (vault.state.apy * 100).toFixed(2) + '%';
     }
 
     const alloc = vault.state.allocation;
