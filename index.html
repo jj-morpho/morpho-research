@@ -91,7 +91,7 @@
       min-width: 0;
       display: flex;
       flex-direction: column;
-      justify-content: center;
+      justify-content: flex-end;
       transition: box-shadow 0.2s ease, border-color 0.2s ease;
     }
 
@@ -480,7 +480,7 @@
         <a id="morphoLink" class="morpho-link" href="#" target="_blank" rel="noopener">
           <div class="protocol-name">Morpho</div>
           <div class="vault-label" id="morphoVaultLabel">Steakhouse USDC</div>
-          <div class="apy" id="morphoApy">5.87%</div>
+          <div class="apy" id="morphoApy">–</div>
         </a>
       </div>
 
@@ -939,44 +939,28 @@
       name: "Steakhouse USDC",
       address: "0xBEEF01735c132Ada46AA9aA4c54623cAA92A64CB",
       url: "https://app.morpho.org/ethereum/vault/0xBEEF01735c132Ada46AA9aA4c54623cAA92A64CB/steakhouse-usdc",
-      apy: "5.87%",
-      badge: "4 assets \u00b7 Isolated Markets",
+      apy: "–",
+      badge: "Loading\u2026",
       curator: "Steakhouse",
-      collateral: [
-        { name: "cbBTC",  type: "Coinbase BTC",    pct: "69.0%", width: 69,   color: "#f59e0b" },
-        { name: "WBTC",   type: "Wrapped BTC",     pct: "25.5%", width: 25.5, color: "#f97316" },
-        { name: "wstETH", type: "Lido Staked ETH", pct: "5.2%",  width: 5.2,  color: "#3b82f6" },
-        { name: "WETH",   type: "Wrapped ETH",     pct: "<0.1%", width: 0.3,  color: "#6366f1" }
-      ]
+      collateral: []
     },
     {
       name: "Gauntlet USDC Prime",
       address: "0xdd0f28e19C1780eb6396170735D45153D261490d",
       url: "https://app.morpho.org/ethereum/vault/0xdd0f28e19C1780eb6396170735D45153D261490d/gauntlet-usdc-prime",
-      apy: "5.41%",
-      badge: "5 assets \u00b7 Isolated Markets",
+      apy: "–",
+      badge: "Loading\u2026",
       curator: "Gauntlet",
-      collateral: [
-        { name: "wstETH", type: "Lido Staked ETH",      pct: "30.2%", width: 30.2, color: "#3b82f6" },
-        { name: "WBTC",   type: "Wrapped BTC",          pct: "25.1%", width: 25.1, color: "#f97316" },
-        { name: "weETH",  type: "EtherFi Restaked ETH", pct: "20.4%", width: 20.4, color: "#818cf8" },
-        { name: "WETH",   type: "Wrapped ETH",          pct: "14.8%", width: 14.8, color: "#6366f1" },
-        { name: "cbBTC",  type: "Coinbase BTC",         pct: "9.5%",  width: 9.5,  color: "#f59e0b" }
-      ]
+      collateral: []
     },
     {
       name: "Steakhouse Prime Instant",
       address: "0xbeef088055857739C12CD3765F20b7679Def0f51",
       url: "https://app.morpho.org/ethereum/vault/0xbeef088055857739C12CD3765F20b7679Def0f51/steakhouse-prime-instant",
-      apy: "5.14%",
-      badge: "4 assets \u00b7 Isolated Markets",
+      apy: "–",
+      badge: "Loading\u2026",
       curator: "Steakhouse",
-      collateral: [
-        { name: "cbBTC",  type: "Coinbase BTC",    pct: "55.0%", width: 55,   color: "#f59e0b" },
-        { name: "WBTC",   type: "Wrapped BTC",     pct: "30.2%", width: 30.2, color: "#f97316" },
-        { name: "wstETH", type: "Lido Staked ETH", pct: "10.1%", width: 10.1, color: "#3b82f6" },
-        { name: "WETH",   type: "Wrapped ETH",     pct: "4.7%",  width: 4.7,  color: "#6366f1" }
-      ]
+      collateral: []
     },
     {
       name: "Smokehouse USDC",
@@ -1242,6 +1226,29 @@
     return true;
   }
 
+  // ── Morpho DeFi Llama fallback ──
+  async function fetchMorphoVaultsFallback() {
+    var res = await fetchWithTimeout('https://yields.llama.fi/pools', {}, 8000);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var json = await res.json();
+    var morphoPools = json.data.filter(function(p) {
+      return (p.project === 'morpho-blue' || p.project === 'morpho-vaults') && p.chain === 'Ethereum';
+    });
+    var updated = false;
+    morphoVaults.forEach(function(v, i) {
+      if (v.apy !== '\u2013') return; // already have live data
+      var addr = v.address.toLowerCase();
+      var pool = morphoPools.find(function(p) {
+        return p.pool && p.pool.toLowerCase().includes(addr);
+      });
+      if (pool && pool.apyBase != null) {
+        morphoVaults[i].apy = pool.apyBase.toFixed(2) + '%';
+        updated = true;
+      }
+    });
+    return updated;
+  }
+
   // ── Aave Collateral (live) ──
 
   function aaveAssetHtml(r) {
@@ -1445,7 +1452,7 @@
   }
 
   async function fetchLiveData() {
-    // Run ALL fetches in parallel instead of sequentially
+    // Run ALL fetches in parallel
     var [morphoResults, aaveRateOk, aaveCollateralOk] = await Promise.all([
       Promise.allSettled(morphoVaults.map(function(v, i) { return fetchMorphoVault(v.address, i); })),
       fetchAaveRateWithTimeout().catch(function(e) { console.warn('[Aave rate]', e); return false; }),
@@ -1455,17 +1462,25 @@
     var morphoOk = morphoResults.some(function(r) { return r.status === 'fulfilled' && r.value; });
     var aaveOk = aaveRateOk || aaveCollateralOk;
 
+    // DeFi Llama fallback for any Morpho vaults still showing "–"
+    var anyMissing = morphoVaults.some(function(v) { return v.apy === '\u2013'; });
+    if (anyMissing) {
+      try {
+        var llamaOk = await fetchMorphoVaultsFallback();
+        if (llamaOk) morphoOk = true;
+      } catch(e) {
+        console.warn('[Morpho DeFi Llama fallback]', e);
+      }
+    }
+
+    // Update Morpho display
     if (morphoOk) {
       var v = morphoVaults[currentVault];
       document.getElementById('morphoApy').textContent = v.apy;
-        renderCollateral(v);
+      renderCollateral(v);
     }
 
-    // If Aave yield never loaded, show a fallback
-    if (!aaveRateOk && document.getElementById('aaveApy').textContent === '\u2013') {
-      document.getElementById('aaveApy').textContent = '4.01%';
-    }
-
+    // DeFi Llama already serves as Aave fallback; no stale hardcoded rate
     if (morphoOk && aaveOk) {
       setStatus('#22c55e', 'Live data \u00b7 Updated just now');
     } else if (morphoOk || aaveOk) {
