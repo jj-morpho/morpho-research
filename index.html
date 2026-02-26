@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>USDC: Risk &amp; Yield Comparison on Morpho</title>
+  <title>Know Your Yield</title>
   <style>
     @import url('https://db.onlinewebfonts.com/c/9419cf3ea65d2c875025a63789ee57fa?family=FK+Grotesk+Variable');
 
@@ -471,8 +471,8 @@
 <!-- ── Header ── -->
 <div class="hero">
   <div class="hero-inner">
-    <h1>USDC: Risk &amp; Yield Comparison on Morpho</h1>
-    <p class="hero-sub">Side-by-side yield rates and collateral risk profiles for USDC lending across Morpho Vaults and Aave V3.</p>
+    <h1>Know Your Yield</h1>
+    <p class="hero-sub">A side-by-side comparison of yield &amp; collateral backing between select Morpho Vaults &amp; Aave V3.</p>
   </div>
 </div>
 
@@ -520,7 +520,7 @@
       <div class="collateral-card morpho">
         <div class="morpho-collateral-inner" id="morphoCollateral">
           <div class="card-header">
-            <h3>Morpho</h3>
+            <h3 id="morphoCollateralTitle">Steakhouse USDC</h3>
             <span class="badge" id="morphoBadge">4 assets &middot; Isolated Markets</span>
           </div>
           <div class="alloc-bar" id="morphoAllocBar"></div>
@@ -1028,6 +1028,7 @@
     document.getElementById('morphoLink').href = v.url;
     document.getElementById('morphoVaultLabel').textContent = v.name;
     document.getElementById('morphoApy').textContent = v.apy;
+    document.getElementById('morphoCollateralTitle').textContent = v.name;
 
     const inner = document.getElementById('morphoCollateral');
     inner.classList.add('fading');
