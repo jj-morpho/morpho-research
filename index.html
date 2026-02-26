@@ -520,7 +520,7 @@
       <div class="collateral-card morpho">
         <div class="morpho-collateral-inner" id="morphoCollateral">
           <div class="card-header">
-            <h3>Morpho</h3>
+            <h3 id="morphoCollateralTitle">Steakhouse USDC</h3>
             <span class="badge" id="morphoBadge">4 assets &middot; Isolated Markets</span>
           </div>
           <div class="alloc-bar" id="morphoAllocBar"></div>
@@ -1028,6 +1028,7 @@
     document.getElementById('morphoLink').href = v.url;
     document.getElementById('morphoVaultLabel').textContent = v.name;
     document.getElementById('morphoApy').textContent = v.apy;
+    document.getElementById('morphoCollateralTitle').textContent = v.name;
 
     const inner = document.getElementById('morphoCollateral');
     inner.classList.add('fading');
