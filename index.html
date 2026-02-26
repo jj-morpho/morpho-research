@@ -107,6 +107,19 @@
       margin-bottom: 4px;
     }
 
+    .chain-badge {
+      font-size: 10px;
+      font-weight: 500;
+      text-transform: none;
+      letter-spacing: 0;
+      color: #86868b;
+      background: #f5f5f7;
+      padding: 2px 7px;
+      border-radius: 100px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
     .yield-card .vault-label {
       font-size: 13px;
       color: #86868b;
@@ -478,7 +491,7 @@
           <div class="vault-tabs" id="vaultTabs"></div>
         </div>
         <a id="morphoLink" class="morpho-link" href="#" target="_blank" rel="noopener">
-          <div class="protocol-name">Morpho</div>
+          <div class="protocol-name">Morpho <span class="chain-badge">Ethereum</span></div>
           <div class="vault-label" id="morphoVaultLabel">Steakhouse USDC</div>
           <div class="apy" id="morphoApy">–</div>
         </a>
@@ -488,7 +501,7 @@
       <div class="yield-card aave">
         <div style="flex:1"></div>
         <a href="https://app.aave.com/reserve-overview/?underlyingAsset=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48&marketName=proto_mainnet_v3" style="text-decoration: none; color: inherit; display: block;" target="_blank" rel="noopener">
-          <div class="protocol-name">Aave V3</div>
+          <div class="protocol-name">Aave V3 <span class="chain-badge">Ethereum</span></div>
           <div class="vault-label">USDC Market</div>
           <div class="apy" id="aaveApy">–</div>
         </a>
@@ -933,6 +946,10 @@
       </div>
     </div>
   </div>
+</div>
+
+<div style="text-align:center; padding:16px 20px 24px; font-size:11px; color:#aeaeb2; max-width:640px; margin:0 auto; line-height:1.5;">
+  This website is for informational purposes only and does not constitute financial advice. Always do your own research before making any investment decisions.
 </div>
 
 <script>
