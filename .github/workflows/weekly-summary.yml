@@ -1,0 +1,55 @@
+name: Weekly Integrator Summary
+
+on:
+  schedule:
+    # Every Monday at 9:00 AM UTC
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+    inputs:
+      week_start:
+        description: "Override week start date (YYYY-MM-DD). Defaults to last Monday."
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  generate-summary:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r scripts/requirements.txt
+
+      - name: Generate weekly summary
+        env:
+          GRANOLA_ACCESS_TOKEN: ${{ secrets.GRANOLA_ACCESS_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GRANOLA_FOLDER: "crm-shared"
+        run: |
+          ARGS=""
+          if [ -n "${{ github.event.inputs.week_start }}" ]; then
+            ARGS="--week-start ${{ github.event.inputs.week_start }}"
+          fi
+          python scripts/generate.py $ARGS
+
+      - name: Commit and push summary
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add summaries/
+          if git diff --staged --quiet; then
+            echo "No new summary to commit."
+          else
+            git commit -m "Add weekly summary for $(date -d 'last monday' +%Y-%m-%d || date +%Y-%m-%d)"
+            git push
+          fi

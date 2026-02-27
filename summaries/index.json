@@ -1,0 +1,14 @@
+{
+  "weeks": [
+    {
+      "week_start": "2026-02-09",
+      "week_end": "2026-02-15",
+      "file": "2026-02-09.json",
+      "note_count": 7,
+      "generated_at": "2026-02-16T09:00:00Z",
+      "theme_count": 4,
+      "friction_count": 3,
+      "idea_count": 6
+    }
+  ]
+}
