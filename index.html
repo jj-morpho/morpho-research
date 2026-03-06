@@ -120,6 +120,39 @@
       vertical-align: middle;
     }
 
+    /* ── Network Selector ── */
+    .network-selector {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-left: auto;
+    }
+
+    .network-btn {
+      border: 1px solid #e5e5ea;
+      background: #ffffff;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      color: #86868b;
+      padding: 4px 12px;
+      border-radius: 100px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .network-btn:hover {
+      border-color: #c7c7cc;
+      color: #1d1d1f;
+    }
+
+    .network-btn.active {
+      background: #1d1d1f;
+      border-color: #1d1d1f;
+      color: #ffffff;
+    }
+
     .yield-card .vault-label {
       font-size: 13px;
       color: #86868b;
@@ -632,6 +665,13 @@
   <div class="section">
     <div class="section-header">
       <span class="section-title">Supply Yield</span>
+      <div class="network-selector" id="networkSelector">
+        <button class="network-btn active" data-chain="1">Ethereum</button>
+        <button class="network-btn" data-chain="8453">Base</button>
+        <button class="network-btn" data-chain="42161">Arbitrum</button>
+        <button class="network-btn" data-chain="10">Optimism</button>
+        <button class="network-btn" data-chain="137">Polygon</button>
+      </div>
     </div>
     <div class="yield-row">
 
@@ -664,7 +704,7 @@
           </div>
         </div>
         <a id="morphoLink" class="morpho-link" href="#" target="_blank" rel="noopener">
-          <div class="protocol-name">Morpho <span class="chain-badge">Ethereum</span></div>
+          <div class="protocol-name">Morpho <span class="chain-badge" id="morphoChainBadge">Ethereum</span></div>
           <div class="vault-label" id="morphoVaultLabel">Steakhouse USDC</div>
           <div class="apy" id="morphoApy">–</div>
         </a>
@@ -673,8 +713,8 @@
       <!-- Aave card -->
       <div class="yield-card aave">
         <div style="flex:1"></div>
-        <a href="https://app.aave.com/reserve-overview/?underlyingAsset=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48&marketName=proto_mainnet_v3" style="text-decoration: none; color: inherit; display: block;" target="_blank" rel="noopener">
-          <div class="protocol-name">Aave V3 <span class="chain-badge">Ethereum</span></div>
+        <a id="aaveLink" href="https://app.aave.com/reserve-overview/?underlyingAsset=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48&marketName=proto_mainnet_v3" style="text-decoration: none; color: inherit; display: block;" target="_blank" rel="noopener">
+          <div class="protocol-name">Aave V3 <span class="chain-badge" id="aaveChainBadge">Ethereum</span></div>
           <div class="vault-label">USDC Market</div>
           <div class="apy" id="aaveApy">–</div>
         </a>
@@ -1121,6 +1161,16 @@
 <script>
   var MORPHO_API = 'https://blue-api.morpho.org/graphql';
 
+  // ── Network Configuration ──
+  var NETWORKS = {
+    1:     { name: 'Ethereum', morphoChainId: 1,  aaveMarketFilter: function(m) { var n=(m.name||'').toLowerCase(); return (m.chainId===1||n.includes('ethereum'))&&!n.includes('lido')&&!n.includes('etherfi')&&!n.includes('plasma'); }, llamaChain: 'Ethereum', aaveMarketName: 'proto_mainnet_v3', morphoApp: 'ethereum', usdcAddress: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48' },
+    8453:  { name: 'Base',     morphoChainId: 8453, aaveMarketFilter: function(m) { var n=(m.name||'').toLowerCase(); return n.includes('base')||m.chainId===8453; }, llamaChain: 'Base', aaveMarketName: 'proto_base_v3', morphoApp: 'base', usdcAddress: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913' },
+    42161: { name: 'Arbitrum', morphoChainId: 42161, aaveMarketFilter: function(m) { var n=(m.name||'').toLowerCase(); return n.includes('arbitrum')||m.chainId===42161; }, llamaChain: 'Arbitrum', aaveMarketName: 'proto_arbitrum_v3', morphoApp: 'arbitrum', usdcAddress: '0xaf88d065e77c8cc2239327c5edb3a432268e5831' },
+    10:    { name: 'Optimism', morphoChainId: 10, aaveMarketFilter: function(m) { var n=(m.name||'').toLowerCase(); return n.includes('optimism')||m.chainId===10; }, llamaChain: 'Optimism', aaveMarketName: 'proto_optimism_v3', morphoApp: 'optimism', usdcAddress: '0x0b2c639c533813f4aa9d7837caf62653d097ff85' },
+    137:   { name: 'Polygon',  morphoChainId: 137, aaveMarketFilter: function(m) { var n=(m.name||'').toLowerCase(); return (n.includes('polygon')&&!n.includes('zk'))||m.chainId===137; }, llamaChain: 'Polygon', aaveMarketName: 'proto_polygon_v3', morphoApp: 'polygon', usdcAddress: '0x3c499c542cef5e3811e1192ce70d8cc03d5c3359' }
+  };
+  var currentChainId = 1;
+
   // ── Vault Data (default fallback, replaced by API data) ──
   var morphoVaults = [
     {
@@ -1159,21 +1209,29 @@
     var res = await fetch('https://raw.githubusercontent.com/morpho-org/morpho-blue-api-metadata/main/data/curators-listing.json');
     if (!res.ok) throw new Error('HTTP ' + res.status);
     var data = await res.json();
-    curatorMeta = data.map(function(c) {
-      var ethAddrs = (c.addresses && c.addresses['1']) || [];
+    // Store raw data so we can rebuild per-chain address sets later
+    curatorMetaRaw = data;
+    buildCuratorAddresses();
+    return curatorMeta;
+  }
+
+  var curatorMetaRaw = [];
+  function buildCuratorAddresses() {
+    var chainKey = String(currentChainId);
+    curatorMeta = curatorMetaRaw.map(function(c) {
+      var addrs = (c.addresses && c.addresses[chainKey]) || [];
       return {
         name: c.name,
         image: c.image || '',
         id: c.id || '',
-        addresses: new Set(ethAddrs.map(function(a) { return a.toLowerCase(); }))
+        addresses: new Set(addrs.map(function(a) { return a.toLowerCase(); }))
       };
     });
-    return curatorMeta;
   }
 
-  // ── Fetch all Ethereum vaults from Morpho API ──
+  // ── Fetch all vaults from Morpho API for current chain ──
   async function fetchAllMorphoVaults() {
-    var query = '{ vaults(where: { chainId_in: [1] }, first: 500) { items { address name state { netApy curator totalAssetsUsd allocation { supplyAssetsUsd market { uniqueKey collateralAsset { symbol name } } } } asset { symbol } } } }';
+    var query = '{ vaults(where: { chainId_in: [' + currentChainId + '] }, first: 500) { items { address name state { netApy curator totalAssetsUsd allocation { supplyAssetsUsd market { uniqueKey collateralAsset { symbol name } } } } asset { symbol } } } }';
     var res = await fetch(MORPHO_API, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1223,7 +1281,7 @@
               pct: pct < 0.1 ? '<0.1%' : pct.toFixed(1) + '%',
               width: Math.max(pct, 0.3),
               color: getColor(sym),
-              url: key ? 'https://app.morpho.org/ethereum/market/' + key : null
+              url: key ? 'https://app.morpho.org/' + (NETWORKS[currentChainId] || NETWORKS[1]).morphoApp + '/market/' + key : null
             };
           })
           .sort(function(a, b) { return b.width - a.width; });
@@ -1234,7 +1292,7 @@
     return {
       name: v.name || v.address,
       address: v.address,
-      url: 'https://app.morpho.org/ethereum/vault/' + v.address,
+      url: 'https://app.morpho.org/' + (NETWORKS[currentChainId] || NETWORKS[1]).morphoApp + '/vault/' + v.address,
       apy: apy,
       badge: badge,
       curator: curatorName,
@@ -1247,28 +1305,24 @@
 
   async function loadAllVaults() {
     try {
-      // Fetch curators listing and all vaults in parallel
-      var [_, apiVaults] = await Promise.all([
-        fetchCuratorsListing().catch(function(e) { console.warn('[Curator listing]', e); }),
-        fetchAllMorphoVaults()
-      ]);
+      // Fetch curators listing (once) and chain vaults in parallel
+      var fetches = [fetchAllMorphoVaults()];
+      if (curatorMetaRaw.length === 0) {
+        fetches.push(fetchCuratorsListing().catch(function(e) { console.warn('[Curator listing]', e); }));
+      }
+      var results = await Promise.all(fetches);
+      var apiVaults = results[0];
 
       if (apiVaults && apiVaults.length > 0) {
-        // Build vault entries and filter to curated vaults with >0 TVL
+        // Build vault entries and filter to curated USDC vaults with >0 TVL
         var entries = apiVaults
           .map(buildVaultEntry)
           .filter(function(v) { return v.curator !== 'Uncurated' && v.totalAssetsUsd > 0 && v.assetSymbol === 'USDC'; })
           .sort(function(a, b) { return b.totalAssetsUsd - a.totalAssetsUsd; });
 
         if (entries.length > 0) {
-          // Find the default Steakhouse USDC vault
-          var defaultIdx = entries.findIndex(function(v) {
-            return v.address.toLowerCase() === '0xbeef01735c132ada46aa9aa4c54623caa92a64cb';
-          });
-          if (defaultIdx === -1) defaultIdx = 0;
-
           morphoVaults = entries;
-          currentVault = defaultIdx;
+          currentVault = 0; // highest TVL vault
           allVaultsLoaded = true;
 
           // Update display with the default vault
@@ -1278,6 +1332,15 @@
           document.getElementById('morphoApy').textContent = dv.apy;
           document.getElementById('morphoCollateralTitle').textContent = dv.name;
           renderCollateral(dv);
+        } else {
+          // No curated USDC vaults on this chain
+          morphoVaults = [];
+          allVaultsLoaded = true;
+          document.getElementById('morphoVaultLabel').textContent = 'No USDC vaults';
+          document.getElementById('morphoApy').textContent = '\u2013';
+          document.getElementById('morphoBadge').textContent = 'No curated vaults on this network';
+          document.getElementById('morphoAllocBar').innerHTML = '';
+          document.getElementById('morphoAssetList').innerHTML = '';
         }
       }
     } catch(e) {
@@ -1578,8 +1641,9 @@
   function aaveAssetHtml(r) {
     var pctStr = r.pct < 0.1 ? '&lt;0.1%' : r.pct.toFixed(1) + '%';
     var meta = getAssetMeta(r.symbol);
+    var net = NETWORKS[currentChainId] || NETWORKS[1];
     var href = r.address
-      ? 'https://app.aave.com/reserve-overview/?underlyingAsset=' + r.address + '&marketName=proto_mainnet_v3'
+      ? 'https://app.aave.com/reserve-overview/?underlyingAsset=' + r.address + '&marketName=' + net.aaveMarketName
       : '#';
     return '<a class="asset-item" href="' + href + '" target="_blank" rel="noopener">' +
       '<div class="asset-left">' +
@@ -1633,11 +1697,8 @@
       if (res.ok) {
         var json = await res.json();
         if (!json.errors && json.data && json.data.markets) {
-          var market = json.data.markets.find(function(m) {
-            var n = (m.name || '').toLowerCase();
-            return (m.chainId === 1 || n.includes('ethereum')) &&
-              !n.includes('lido') && !n.includes('etherfi') && !n.includes('plasma');
-          });
+          var net = NETWORKS[currentChainId] || NETWORKS[1];
+          var market = json.data.markets.find(net.aaveMarketFilter);
           if (market && market.supplyReserves) {
             var usdcReserve = market.supplyReserves.find(function(r) {
               return r.underlyingToken && r.underlyingToken.symbol === 'USDC';
@@ -1656,11 +1717,12 @@
 
     // Fallback: DeFi Llama
     try {
+      var net = NETWORKS[currentChainId] || NETWORKS[1];
       var res2 = await fetchWithTimeout('https://yields.llama.fi/pools', {}, 8000);
       if (!res2.ok) throw new Error('HTTP ' + res2.status);
       var json2 = await res2.json();
       llamaAavePools = json2.data.filter(function(p) {
-        return p.project === 'aave-v3' && p.chain === 'Ethereum';
+        return p.project === 'aave-v3' && p.chain === net.llamaChain;
       });
       var pool = llamaAavePools.find(function(p) { return p.symbol === 'USDC'; });
       if (pool && pool.apyBase != null) {
@@ -1686,12 +1748,9 @@
       var json = await res.json();
       if (json.errors) throw new Error(json.errors[0].message);
 
-      var market = json.data.markets.find(function(m) {
-        var n = (m.name || '').toLowerCase();
-        return (m.chainId === 1 || n.includes('ethereum')) &&
-          !n.includes('lido') && !n.includes('etherfi') && !n.includes('plasma');
-      });
-      if (!market || !market.supplyReserves) throw new Error('Ethereum core market not found');
+      var net = NETWORKS[currentChainId] || NETWORKS[1];
+      var market = json.data.markets.find(net.aaveMarketFilter);
+      if (!market || !market.supplyReserves) throw new Error(net.name + ' core market not found');
 
       var nonUsdc = market.supplyReserves.filter(function(r) {
         return r.underlyingToken && r.underlyingToken.symbol !== 'USDC';
@@ -1731,12 +1790,13 @@
 
     // Fallback: DeFi Llama pools (may already be cached from rate fetch)
     try {
+      var net2 = NETWORKS[currentChainId] || NETWORKS[1];
       if (!llamaAavePools || llamaAavePools.length === 0) {
         var res2 = await fetchWithTimeout('https://yields.llama.fi/pools', {}, 8000);
         if (!res2.ok) throw new Error('HTTP ' + res2.status);
         var json2 = await res2.json();
         llamaAavePools = json2.data.filter(function(p) {
-          return p.project === 'aave-v3' && p.chain === 'Ethereum';
+          return p.project === 'aave-v3' && p.chain === net2.llamaChain;
         });
       }
 
@@ -1793,6 +1853,47 @@
       setStatus('#aeaeb2', 'Using cached data \u00b7 APIs unavailable');
     }
   }
+
+  // ── Network switching ──
+  async function switchNetwork(chainId) {
+    if (chainId === currentChainId) return;
+    currentChainId = chainId;
+    var net = NETWORKS[chainId] || NETWORKS[1];
+
+    // Update UI active state
+    document.querySelectorAll('.network-btn').forEach(function(btn) {
+      btn.classList.toggle('active', parseInt(btn.dataset.chain) === chainId);
+    });
+
+    // Update chain badges
+    document.getElementById('morphoChainBadge').textContent = net.name;
+    document.getElementById('aaveChainBadge').textContent = net.name;
+
+    // Update Aave link
+    document.getElementById('aaveLink').href = 'https://app.aave.com/reserve-overview/?underlyingAsset=' + net.usdcAddress + '&marketName=' + net.aaveMarketName;
+
+    // Reset displays
+    document.getElementById('morphoApy').textContent = '\u2013';
+    document.getElementById('aaveApy').textContent = '\u2013';
+    setStatus('#aeaeb2', 'Loading live data\u2026');
+
+    // Rebuild curator addresses for new chain
+    buildCuratorAddresses();
+
+    // Clear caches
+    llamaAavePools = null;
+    allVaultsLoaded = false;
+
+    // Re-fetch everything
+    await fetchLiveData();
+  }
+
+  document.getElementById('networkSelector').addEventListener('click', function(e) {
+    var btn = e.target.closest('.network-btn');
+    if (!btn) return;
+    var chainId = parseInt(btn.dataset.chain);
+    switchNetwork(chainId);
+  });
 
   // ── Init ──
   renderCollateral(morphoVaults[0]);
