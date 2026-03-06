@@ -310,6 +310,13 @@
       font-size: 14px;
       font-weight: 600;
       color: #86868b;
+      overflow: hidden;
+    }
+
+    .dropdown-item .item-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     .dropdown-item .item-label {
@@ -329,6 +336,13 @@
     }
 
     .dropdown-empty {
+      padding: 24px 16px;
+      text-align: center;
+      font-size: 13px;
+      color: #86868b;
+    }
+
+    .dropdown-loading {
       padding: 24px 16px;
       text-align: center;
       font-size: 13px;
@@ -1093,73 +1107,184 @@
 </div>
 
 <script>
-  // ── Vault Data ──
-  const morphoVaults = [
+  var MORPHO_API = 'https://blue-api.morpho.org/graphql';
+
+  // ── Vault Data (default fallback, replaced by API data) ──
+  var morphoVaults = [
     {
       name: "Steakhouse USDC",
       address: "0xBEEF01735c132Ada46AA9aA4c54623cAA92A64CB",
-      url: "https://app.morpho.org/ethereum/vault/0xBEEF01735c132Ada46AA9aA4c54623cAA92A64CB/steakhouse-usdc",
-      apy: "–",
+      url: "https://app.morpho.org/ethereum/vault/0xBEEF01735c132Ada46AA9aA4c54623cAA92A64CB",
+      apy: "\u2013",
       badge: "Loading\u2026",
-      curator: "Steakhouse",
-      collateral: []
-    },
-    {
-      name: "Gauntlet USDC Prime",
-      address: "0xdd0f28e19C1780eb6396170735D45153D261490d",
-      url: "https://app.morpho.org/ethereum/vault/0xdd0f28e19C1780eb6396170735D45153D261490d/gauntlet-usdc-prime",
-      apy: "–",
-      badge: "Loading\u2026",
-      curator: "Gauntlet",
-      collateral: []
-    },
-    {
-      name: "Smokehouse USDC",
-      address: "0xBEeFFF209270748ddd194831b3fa287a5386f5bC",
-      url: "https://app.morpho.org/ethereum/vault/0xBEeFFF209270748ddd194831b3fa287a5386f5bC/smokehouse-usdc",
-      apy: "–",
-      badge: "Loading\u2026",
-      curator: "Steakhouse",
-      collateral: []
-    },
-    {
-      name: "Gauntlet USDC Frontier",
-      address: "0xc582F04d8a82795aa2Ff9c8bb4c1c889fe7b754e",
-      url: "https://app.morpho.org/ethereum/vault/0xc582F04d8a82795aa2Ff9c8bb4c1c889fe7b754e/gauntlet-usdc-frontier",
-      apy: "–",
-      badge: "Loading\u2026",
-      curator: "Gauntlet",
+      curator: "Steakhouse Financial",
+      curatorImage: "https://cdn.morpho.org/v2/assets/images/steakhouse.svg",
       collateral: []
     }
   ];
 
-  let currentVault = 0;
-  let selectedCurator = null;
+  // Curator metadata cache: { name, image, addresses: Set of lowercase addresses }
+  var curatorMeta = [];
+  var currentVault = 0;
+  var selectedCurator = null;
+  var allVaultsLoaded = false;
 
   // ── Dropdown state ──
-  const selectorBtn = document.getElementById('vaultSelectorBtn');
-  const dropdown = document.getElementById('vaultDropdown');
-  const curatorPanel = document.getElementById('curatorPanel');
-  const vaultPanel = document.getElementById('vaultPanel');
-  const curatorSearch = document.getElementById('curatorSearch');
-  const vaultSearch = document.getElementById('vaultSearch');
-  const curatorList = document.getElementById('curatorList');
-  const vaultList = document.getElementById('vaultList');
-  const curatorClear = document.getElementById('curatorClear');
-  const vaultClear = document.getElementById('vaultClear');
-  const vaultBack = document.getElementById('vaultBack');
+  var selectorBtn = document.getElementById('vaultSelectorBtn');
+  var dropdown = document.getElementById('vaultDropdown');
+  var curatorPanel = document.getElementById('curatorPanel');
+  var vaultPanel = document.getElementById('vaultPanel');
+  var curatorSearch = document.getElementById('curatorSearch');
+  var vaultSearch = document.getElementById('vaultSearch');
+  var curatorList = document.getElementById('curatorList');
+  var vaultListEl = document.getElementById('vaultList');
+  var curatorClear = document.getElementById('curatorClear');
+  var vaultClear = document.getElementById('vaultClear');
+  var vaultBack = document.getElementById('vaultBack');
+
+  // ── Fetch curators listing from Morpho metadata ──
+  async function fetchCuratorsListing() {
+    var res = await fetch('https://raw.githubusercontent.com/morpho-org/morpho-blue-api-metadata/main/data/curators-listing.json');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var data = await res.json();
+    curatorMeta = data.map(function(c) {
+      var ethAddrs = (c.addresses && c.addresses['1']) || [];
+      return {
+        name: c.name,
+        image: c.image || '',
+        id: c.id || '',
+        addresses: new Set(ethAddrs.map(function(a) { return a.toLowerCase(); }))
+      };
+    });
+    return curatorMeta;
+  }
+
+  // ── Fetch all Ethereum vaults from Morpho API ──
+  async function fetchAllMorphoVaults() {
+    var query = '{ vaults(where: { chainId_in: [1] }, first: 500) { items { address name state { netApy curator totalAssetsUsd allocation { supplyAssetsUsd market { uniqueKey collateralAsset { symbol name } } } } asset { symbol } } } }';
+    var res = await fetch(MORPHO_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: query })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var json = await res.json();
+    if (json.errors) throw new Error(json.errors[0].message);
+    return (json.data && json.data.vaults && json.data.vaults.items) || [];
+  }
+
+  function findCuratorForAddress(addr) {
+    if (!addr) return null;
+    var lower = addr.toLowerCase();
+    for (var i = 0; i < curatorMeta.length; i++) {
+      if (curatorMeta[i].addresses.has(lower)) return curatorMeta[i];
+    }
+    return null;
+  }
+
+  function buildVaultEntry(v) {
+    var curatorAddr = v.state ? v.state.curator : null;
+    var curator = findCuratorForAddress(curatorAddr);
+    var curatorName = curator ? curator.name : 'Uncurated';
+    var curatorImage = curator ? curator.image : '';
+
+    var apy = '\u2013';
+    if (v.state && v.state.netApy != null) {
+      apy = (v.state.netApy * 100).toFixed(2) + '%';
+    }
+
+    var collateral = [];
+    var badge = 'Loading\u2026';
+    if (v.state && v.state.allocation && v.state.allocation.length > 0) {
+      var alloc = v.state.allocation;
+      var totalUsd = alloc.reduce(function(s, a) { return s + (parseFloat(a.supplyAssetsUsd) || 0); }, 0);
+      if (totalUsd > 0) {
+        collateral = alloc
+          .filter(function(a) { return a.market && a.market.collateralAsset; })
+          .map(function(a) {
+            var pct = (parseFloat(a.supplyAssetsUsd) || 0) / totalUsd * 100;
+            var sym = a.market.collateralAsset.symbol;
+            var key = a.market.uniqueKey;
+            return {
+              name: sym,
+              type: a.market.collateralAsset.name || sym,
+              pct: pct < 0.1 ? '<0.1%' : pct.toFixed(1) + '%',
+              width: Math.max(pct, 0.3),
+              color: getColor(sym),
+              url: key ? 'https://app.morpho.org/ethereum/market/' + key : null
+            };
+          })
+          .sort(function(a, b) { return b.width - a.width; });
+        badge = collateral.length + ' assets \u00b7 Isolated';
+      }
+    }
+
+    return {
+      name: v.name || v.address,
+      address: v.address,
+      url: 'https://app.morpho.org/ethereum/vault/' + v.address,
+      apy: apy,
+      badge: badge,
+      curator: curatorName,
+      curatorImage: curatorImage,
+      collateral: collateral,
+      totalAssetsUsd: (v.state && parseFloat(v.state.totalAssetsUsd)) || 0
+    };
+  }
+
+  async function loadAllVaults() {
+    try {
+      // Fetch curators listing and all vaults in parallel
+      var [_, apiVaults] = await Promise.all([
+        fetchCuratorsListing().catch(function(e) { console.warn('[Curator listing]', e); }),
+        fetchAllMorphoVaults()
+      ]);
+
+      if (apiVaults && apiVaults.length > 0) {
+        // Build vault entries and filter to curated vaults with >0 TVL
+        var entries = apiVaults
+          .map(buildVaultEntry)
+          .filter(function(v) { return v.curator !== 'Uncurated' && v.totalAssetsUsd > 0; })
+          .sort(function(a, b) { return b.totalAssetsUsd - a.totalAssetsUsd; });
+
+        if (entries.length > 0) {
+          // Find the default Steakhouse USDC vault
+          var defaultIdx = entries.findIndex(function(v) {
+            return v.address.toLowerCase() === '0xbeef01735c132ada46aa9aa4c54623caa92a64cb';
+          });
+          if (defaultIdx === -1) defaultIdx = 0;
+
+          morphoVaults = entries;
+          currentVault = defaultIdx;
+          allVaultsLoaded = true;
+
+          // Update display with the default vault
+          var dv = morphoVaults[currentVault];
+          document.getElementById('morphoLink').href = dv.url;
+          document.getElementById('morphoVaultLabel').textContent = dv.name;
+          document.getElementById('morphoApy').textContent = dv.apy;
+          document.getElementById('morphoCollateralTitle').textContent = dv.name;
+          renderCollateral(dv);
+        }
+      }
+    } catch(e) {
+      console.warn('[Load all vaults]', e);
+    }
+  }
 
   function getCurators() {
-    const seen = {};
-    morphoVaults.forEach(v => {
-      if (!seen[v.curator]) seen[v.curator] = [];
-      seen[v.curator].push(v);
+    var seen = {};
+    morphoVaults.forEach(function(v) {
+      if (!seen[v.curator]) seen[v.curator] = { vaults: [], image: v.curatorImage || '' };
+      seen[v.curator].vaults.push(v);
     });
-    return Object.keys(seen).sort().map(name => ({ name, vaults: seen[name] }));
+    return Object.keys(seen).sort().map(function(name) {
+      return { name: name, vaults: seen[name].vaults, image: seen[name].image };
+    });
   }
 
   function toggleDropdown() {
-    const isOpen = dropdown.classList.contains('show');
+    var isOpen = dropdown.classList.contains('show');
     if (isOpen) {
       closeDropdown();
     } else {
@@ -1182,7 +1307,7 @@
     vaultPanel.style.display = 'none';
     curatorSearch.value = '';
     renderCurators('');
-    setTimeout(() => curatorSearch.focus(), 50);
+    setTimeout(function() { curatorSearch.focus(); }, 50);
   }
 
   function showVaultPanel(curatorName) {
@@ -1190,61 +1315,68 @@
     curatorPanel.style.display = 'none';
     vaultPanel.style.display = '';
     vaultSearch.value = '';
-    renderVaults('');
-    setTimeout(() => vaultSearch.focus(), 50);
+    renderVaultsDropdown('');
+    setTimeout(function() { vaultSearch.focus(); }, 50);
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
   function renderCurators(filter) {
-    const curators = getCurators();
-    const q = filter.toLowerCase().trim();
-    const filtered = q ? curators.filter(c => c.name.toLowerCase().includes(q)) : curators;
+    var curators = getCurators();
+    var q = filter.toLowerCase().trim();
+    var filtered = q ? curators.filter(function(c) { return c.name.toLowerCase().includes(q); }) : curators;
 
     if (filtered.length === 0) {
       curatorList.innerHTML = '<div class="dropdown-empty">No curators found</div>';
       return;
     }
 
-    curatorList.innerHTML = filtered.map(c => {
-      const initials = c.name.substring(0, 2).toUpperCase();
-      const count = c.vaults.length;
-      return '<li class="dropdown-item" data-curator="' + c.name + '">' +
-        '<span class="item-icon">' + initials + '</span>' +
-        '<span class="item-label">' + c.name + '</span>' +
+    curatorList.innerHTML = filtered.map(function(c) {
+      var initials = c.name.substring(0, 2).toUpperCase();
+      var iconHtml = c.image
+        ? '<img src="' + escapeHtml(c.image) + '" alt="" onerror="this.parentNode.textContent=\'' + initials + '\'">'
+        : initials;
+      return '<li class="dropdown-item" data-curator="' + escapeHtml(c.name) + '">' +
+        '<span class="item-icon">' + iconHtml + '</span>' +
+        '<span class="item-label">' + escapeHtml(c.name) + '</span>' +
         '<span class="item-arrow">&#8250;</span>' +
       '</li>';
     }).join('');
 
-    curatorList.querySelectorAll('.dropdown-item').forEach(item => {
-      item.addEventListener('click', () => showVaultPanel(item.dataset.curator));
+    curatorList.querySelectorAll('.dropdown-item').forEach(function(item) {
+      item.addEventListener('click', function() { showVaultPanel(item.dataset.curator); });
     });
   }
 
-  function renderVaults(filter) {
-    const curators = getCurators();
-    const curator = curators.find(c => c.name === selectedCurator);
+  function renderVaultsDropdown(filter) {
+    var curators = getCurators();
+    var curator = curators.find(function(c) { return c.name === selectedCurator; });
     if (!curator) return;
 
-    const q = filter.toLowerCase().trim();
-    const filtered = q ? curator.vaults.filter(v => v.name.toLowerCase().includes(q)) : curator.vaults;
+    var q = filter.toLowerCase().trim();
+    var filtered = q ? curator.vaults.filter(function(v) { return v.name.toLowerCase().includes(q); }) : curator.vaults;
 
     if (filtered.length === 0) {
-      vaultList.innerHTML = '<div class="dropdown-empty">No vaults found</div>';
+      vaultListEl.innerHTML = '<div class="dropdown-empty">No vaults found</div>';
       return;
     }
 
-    vaultList.innerHTML = filtered.map(v => {
-      const idx = morphoVaults.indexOf(v);
-      const isSelected = idx === currentVault;
+    vaultListEl.innerHTML = filtered.map(function(v) {
+      var idx = morphoVaults.indexOf(v);
+      var isSelected = idx === currentVault;
+      var initials = v.name.substring(0, 2).toUpperCase();
       return '<li class="dropdown-item' + (isSelected ? ' selected' : '') + '" data-index="' + idx + '">' +
-        '<span class="item-icon">' + v.name.substring(0, 2).toUpperCase() + '</span>' +
-        '<span class="item-label">' + v.name + '</span>' +
+        '<span class="item-icon">' + initials + '</span>' +
+        '<span class="item-label">' + escapeHtml(v.name) + '</span>' +
         (isSelected ? '<span class="item-check">&#10003;</span>' : '') +
       '</li>';
     }).join('');
 
-    vaultList.querySelectorAll('.dropdown-item').forEach(item => {
-      item.addEventListener('click', () => {
-        const idx = parseInt(item.dataset.index);
+    vaultListEl.querySelectorAll('.dropdown-item').forEach(function(item) {
+      item.addEventListener('click', function() {
+        var idx = parseInt(item.dataset.index);
         selectVault(idx);
         closeDropdown();
       });
@@ -1252,46 +1384,46 @@
   }
 
   // ── Event listeners ──
-  selectorBtn.addEventListener('click', (e) => {
+  selectorBtn.addEventListener('click', function(e) {
     e.stopPropagation();
     toggleDropdown();
   });
 
-  dropdown.addEventListener('click', (e) => e.stopPropagation());
+  dropdown.addEventListener('click', function(e) { e.stopPropagation(); });
 
-  document.addEventListener('click', () => closeDropdown());
+  document.addEventListener('click', function() { closeDropdown(); });
 
-  curatorSearch.addEventListener('input', () => renderCurators(curatorSearch.value));
-  vaultSearch.addEventListener('input', () => renderVaults(vaultSearch.value));
+  curatorSearch.addEventListener('input', function() { renderCurators(curatorSearch.value); });
+  vaultSearch.addEventListener('input', function() { renderVaultsDropdown(vaultSearch.value); });
 
-  curatorClear.addEventListener('click', () => {
+  curatorClear.addEventListener('click', function() {
     curatorSearch.value = '';
     renderCurators('');
     curatorSearch.focus();
   });
 
-  vaultClear.addEventListener('click', () => {
+  vaultClear.addEventListener('click', function() {
     vaultSearch.value = '';
-    renderVaults('');
+    renderVaultsDropdown('');
     vaultSearch.focus();
   });
 
-  vaultBack.addEventListener('click', () => showCuratorPanel());
+  vaultBack.addEventListener('click', function() { showCuratorPanel(); });
 
   // ── Select vault ──
   function selectVault(index) {
     if (index === currentVault) return;
     currentVault = index;
-    const v = morphoVaults[index];
+    var v = morphoVaults[index];
 
     document.getElementById('morphoLink').href = v.url;
     document.getElementById('morphoVaultLabel').textContent = v.name;
     document.getElementById('morphoApy').textContent = v.apy;
     document.getElementById('morphoCollateralTitle').textContent = v.name;
 
-    const inner = document.getElementById('morphoCollateral');
+    var inner = document.getElementById('morphoCollateral');
     inner.classList.add('fading');
-    setTimeout(() => {
+    setTimeout(function() {
       renderCollateral(v);
       inner.classList.remove('fading');
     }, 200);
@@ -1321,17 +1453,13 @@
   }
 
 
-  // ── Init ──
-  renderCollateral(morphoVaults[0]);
-
   // ═══════════════════════════════════════════════════
   // ── Live Data Integration ──
   // ═══════════════════════════════════════════════════
 
-  const MORPHO_API = 'https://blue-api.morpho.org/graphql';
-  const AAVE_API = 'https://api.v3.aave.com/graphql';
-  let llamaAavePools = null;
-  let aaveTotalAssets = 52;
+  var AAVE_API = 'https://api.v3.aave.com/graphql';
+  var llamaAavePools = null;
+  var aaveTotalAssets = 52;
 
   // Canonical symbol display & color map (keyed by UPPERCASE for lookup)
   const ASSET_META = {
@@ -1426,91 +1554,7 @@
     el.innerHTML = '<span class="dot" style="background:' + color + '"></span> ' + text;
   }
 
-  async function fetchMorphoVault(address, index) {
-    const query = `{
-      vaultByAddress(address: "${address}", chainId: 1) {
-        state {
-          netApy
-          allocation {
-            supplyAssetsUsd
-            market {
-              uniqueKey
-              collateralAsset { symbol name }
-            }
-          }
-        }
-      }
-    }`;
-
-    const res = await fetch(MORPHO_API, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query })
-    });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const json = await res.json();
-    if (json.errors) throw new Error(json.errors[0].message);
-
-    const vault = json.data.vaultByAddress;
-    if (!vault || !vault.state) return false;
-
-    if (vault.state.netApy != null) {
-      morphoVaults[index].apy = (vault.state.netApy * 100).toFixed(2) + '%';
-    }
-
-    const alloc = vault.state.allocation;
-    if (alloc && alloc.length > 0) {
-      const totalUsd = alloc.reduce((s, a) => s + (parseFloat(a.supplyAssetsUsd) || 0), 0);
-      if (totalUsd > 0) {
-        const newCollateral = alloc
-          .filter(a => a.market && a.market.collateralAsset)
-          .map(a => {
-            const pct = (parseFloat(a.supplyAssetsUsd) || 0) / totalUsd * 100;
-            const sym = a.market.collateralAsset.symbol;
-            const key = a.market.uniqueKey;
-            return {
-              name: sym,
-              type: a.market.collateralAsset.name || sym,
-              pct: pct < 0.1 ? '<0.1%' : pct.toFixed(1) + '%',
-              width: Math.max(pct, 0.3),
-              color: getColor(sym),
-              url: key ? 'https://app.morpho.org/ethereum/market/' + key : null
-            };
-          })
-          .sort((a, b) => b.width - a.width);
-
-        if (newCollateral.length > 0) {
-          morphoVaults[index].collateral = newCollateral;
-          morphoVaults[index].badge = newCollateral.length + ' assets \u00b7 Isolated';
-        }
-      }
-    }
-    return true;
-  }
-
-  // ── Morpho DeFi Llama fallback ──
-  async function fetchMorphoVaultsFallback() {
-    var res = await fetchWithTimeout('https://yields.llama.fi/pools', {}, 8000);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    var json = await res.json();
-    var morphoPools = json.data.filter(function(p) {
-      return (p.project === 'morpho-blue' || p.project === 'morpho-vaults') && p.chain === 'Ethereum';
-    });
-    var updated = false;
-    morphoVaults.forEach(function(v, i) {
-      if (v.apy !== '\u2013') return; // already have live data
-      var addr = v.address.toLowerCase();
-      var pool = morphoPools.find(function(p) {
-        return p.pool && p.pool.toLowerCase().includes(addr);
-      });
-      if (pool && (pool.apy != null || pool.apyBase != null)) {
-        var totalApy = (pool.apy != null) ? pool.apy : ((pool.apyBase || 0) + (pool.apyReward || 0));
-        morphoVaults[i].apy = totalApy.toFixed(2) + '%';
-        updated = true;
-      }
-    });
-    return updated;
-  }
+  // (Individual vault fetch removed — loadAllVaults handles batch loading)
 
   // ── Aave Collateral (live) ──
 
@@ -1715,35 +1759,15 @@
   }
 
   async function fetchLiveData() {
-    // Run ALL fetches in parallel
-    var [morphoResults, aaveRateOk, aaveCollateralOk] = await Promise.all([
-      Promise.allSettled(morphoVaults.map(function(v, i) { return fetchMorphoVault(v.address, i); })),
+    // Run all fetches in parallel: Morpho vaults + Aave
+    var [morphoOk, aaveRateOk, aaveCollateralOk] = await Promise.all([
+      loadAllVaults().then(function() { return allVaultsLoaded; }).catch(function(e) { console.warn('[Morpho vaults]', e); return false; }),
       fetchAaveRateWithTimeout().catch(function(e) { console.warn('[Aave rate]', e); return false; }),
       fetchAaveCollateralWithTimeout().catch(function(e) { console.warn('[Aave collateral]', e); return false; })
     ]);
 
-    var morphoOk = morphoResults.some(function(r) { return r.status === 'fulfilled' && r.value; });
     var aaveOk = aaveRateOk || aaveCollateralOk;
 
-    // DeFi Llama fallback for any Morpho vaults still showing "–"
-    var anyMissing = morphoVaults.some(function(v) { return v.apy === '\u2013'; });
-    if (anyMissing) {
-      try {
-        var llamaOk = await fetchMorphoVaultsFallback();
-        if (llamaOk) morphoOk = true;
-      } catch(e) {
-        console.warn('[Morpho DeFi Llama fallback]', e);
-      }
-    }
-
-    // Update Morpho display
-    if (morphoOk) {
-      var v = morphoVaults[currentVault];
-      document.getElementById('morphoApy').textContent = v.apy;
-      renderCollateral(v);
-    }
-
-    // DeFi Llama already serves as Aave fallback; no stale hardcoded rate
     if (morphoOk && aaveOk) {
       setStatus('#22c55e', 'Live data \u00b7 Updated just now');
     } else if (morphoOk || aaveOk) {
@@ -1753,6 +1777,8 @@
     }
   }
 
+  // ── Init ──
+  renderCollateral(morphoVaults[0]);
   fetchLiveData();
 </script>
 
