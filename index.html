@@ -1376,11 +1376,16 @@
       return;
     }
 
+    var curatorImg = curator.image || '';
+    var curatorInitials = curator.name.substring(0, 2).toUpperCase();
     vaultListEl.innerHTML = filtered.map(function(v) {
       var idx = morphoVaults.indexOf(v);
       var isSelected = idx === currentVault;
+      var iconHtml = curatorImg
+        ? '<img src="' + escapeHtml(curatorImg) + '" alt="" onerror="this.parentNode.textContent=\'' + curatorInitials + '\'">'
+        : curatorInitials;
       return '<li class="dropdown-item' + (isSelected ? ' selected' : '') + '" data-index="' + idx + '">' +
-        '<span class="item-icon"><span style="width:8px;height:8px;border-radius:50%;background:#c7c7cc;display:block"></span></span>' +
+        '<span class="item-icon">' + iconHtml + '</span>' +
         '<span class="item-label">' + escapeHtml(v.name) + '</span>' +
         (isSelected ? '<span class="item-check">&#10003;</span>' : '') +
       '</li>';
