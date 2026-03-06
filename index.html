@@ -184,7 +184,7 @@
       top: calc(100% + 8px);
       left: 0;
       width: 320px;
-      max-height: 380px;
+      max-height: 420px;
       background: #ffffff;
       border: 1px solid #e5e5ea;
       border-radius: 14px;
@@ -196,6 +196,18 @@
 
     .vault-dropdown.show {
       display: flex;
+    }
+
+    #curatorPanel, #vaultPanel {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+      flex: 1;
+    }
+
+    #vaultPanel[style*="display:none"], #vaultPanel[style*="display: none"] {
+      display: none !important;
     }
 
     .dropdown-search-wrap {
@@ -1228,7 +1240,8 @@
       curator: curatorName,
       curatorImage: curatorImage,
       collateral: collateral,
-      totalAssetsUsd: (v.state && parseFloat(v.state.totalAssetsUsd)) || 0
+      totalAssetsUsd: (v.state && parseFloat(v.state.totalAssetsUsd)) || 0,
+      assetSymbol: (v.asset && v.asset.symbol) || ''
     };
   }
 
@@ -1244,7 +1257,7 @@
         // Build vault entries and filter to curated vaults with >0 TVL
         var entries = apiVaults
           .map(buildVaultEntry)
-          .filter(function(v) { return v.curator !== 'Uncurated' && v.totalAssetsUsd > 0; })
+          .filter(function(v) { return v.curator !== 'Uncurated' && v.totalAssetsUsd > 0 && v.assetSymbol === 'USDC'; })
           .sort(function(a, b) { return b.totalAssetsUsd - a.totalAssetsUsd; });
 
         if (entries.length > 0) {
@@ -1366,9 +1379,8 @@
     vaultListEl.innerHTML = filtered.map(function(v) {
       var idx = morphoVaults.indexOf(v);
       var isSelected = idx === currentVault;
-      var initials = v.name.substring(0, 2).toUpperCase();
       return '<li class="dropdown-item' + (isSelected ? ' selected' : '') + '" data-index="' + idx + '">' +
-        '<span class="item-icon">' + initials + '</span>' +
+        '<span class="item-icon"><span style="width:8px;height:8px;border-radius:50%;background:#c7c7cc;display:block"></span></span>' +
         '<span class="item-label">' + escapeHtml(v.name) + '</span>' +
         (isSelected ? '<span class="item-check">&#10003;</span>' : '') +
       '</li>';
