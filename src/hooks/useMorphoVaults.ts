@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { NETWORKS } from "@/lib/constants";
 import {
   fetchAllMorphoVaults,
@@ -29,7 +29,17 @@ export function useMorphoVaults() {
   const [currentVaultIndex, setCurrentVaultIndex] = useState(0);
   const [allLoaded, setAllLoaded] = useState(false);
 
+  // Cache raw API vault data so duration switches don't need to re-fetch
+  const rawCacheRef = useRef<{ chainId: number; data: unknown[] } | null>(null);
+
   const currentVault = vaults[currentVaultIndex] || vaults[0] || DEFAULT_VAULT;
+
+  const buildEntries = useCallback((apiVaults: unknown[], chainId: number, duration: YieldDuration) => {
+    return apiVaults
+      .map((v) => buildVaultEntry(v, chainId, duration))
+      .filter((v) => v.curator !== "Uncurated" && v.totalAssetsUsd > 0 && v.assetSymbol === "USDC")
+      .sort((a, b) => b.totalAssetsUsd - a.totalAssetsUsd);
+  }, []);
 
   const loadVaults = useCallback(async (chainId: number, duration: YieldDuration = "instant") => {
     try {
@@ -44,10 +54,10 @@ export function useMorphoVaults() {
       const apiVaults = results[0] as unknown[];
 
       if (apiVaults?.length > 0) {
-        const entries = apiVaults
-          .map((v) => buildVaultEntry(v, chainId, duration))
-          .filter((v) => v.curator !== "Uncurated" && v.totalAssetsUsd > 0 && v.assetSymbol === "USDC")
-          .sort((a, b) => b.totalAssetsUsd - a.totalAssetsUsd);
+        // Cache the raw data for instant duration rebuilds
+        rawCacheRef.current = { chainId, data: apiVaults };
+
+        const entries = buildEntries(apiVaults, chainId, duration);
 
         if (entries.length > 0) {
           const preferred = NETWORKS[chainId]?.preferredVault;
@@ -69,7 +79,23 @@ export function useMorphoVaults() {
       console.warn("[Load all vaults]", e);
     }
     return false;
-  }, []);
+  }, [buildEntries]);
+
+  // Rebuild vault entries from cache with a new duration — no API call needed
+  const rebuildForDuration = useCallback((duration: YieldDuration) => {
+    const cache = rawCacheRef.current;
+    if (!cache) return;
+    const entries = buildEntries(cache.data, cache.chainId, duration);
+    if (entries.length > 0) {
+      // Preserve current vault selection by address
+      const currentAddr = vaults[currentVaultIndex]?.address;
+      setVaults(entries);
+      if (currentAddr) {
+        const idx = entries.findIndex((v) => v.address === currentAddr);
+        if (idx >= 0) setCurrentVaultIndex(idx);
+      }
+    }
+  }, [buildEntries, vaults, currentVaultIndex]);
 
   const selectVault = useCallback((index: number) => {
     setCurrentVaultIndex(index);
@@ -92,6 +118,7 @@ export function useMorphoVaults() {
     currentVaultIndex,
     allLoaded,
     loadVaults,
+    rebuildForDuration,
     selectVault,
     getCurators,
   };

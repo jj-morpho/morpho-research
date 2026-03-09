@@ -62,7 +62,6 @@ const DURATION_APY_FIELD: Record<YieldDuration, string> = {
   instant: "netApy",
   "7d": "weeklyNetApy",
   "30d": "monthlyNetApy",
-  "90d": "monthlyNetApy", // best available approximation
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -292,7 +291,7 @@ async function getLlamaPools(): Promise<typeof llamaAllPools> {
   return llamaAllPools;
 }
 
-export async function fetchHistoricalApy(poolId: string, days: number): Promise<number | null> {
+async function fetchHistoricalApy(poolId: string, days: number): Promise<number | null> {
   try {
     const res = await fetchWithTimeout(`${LLAMA_CHART_URL}/${poolId}`, {}, 8000);
     if (!res.ok) return null;
@@ -309,30 +308,6 @@ export async function fetchHistoricalApy(poolId: string, days: number): Promise<
     return avg;
   } catch (e) {
     console.warn("[DeFi Llama chart]", poolId, e);
-    return null;
-  }
-}
-
-export async function fetchMorphoHistoricalApy(
-  vaultAddress: string,
-  chainId: number,
-  days: number,
-): Promise<number | null> {
-  try {
-    const pools = await getLlamaPools();
-    if (!pools) return null;
-    const net = NETWORKS[chainId] || NETWORKS[1];
-    // Morpho vaults appear as "morpho-blue" on DeFi Llama
-    const pool = pools.find(
-      (p) =>
-        p.project === "morpho-blue" &&
-        p.chain === net.llamaChain &&
-        p.pool?.toLowerCase().includes(vaultAddress.toLowerCase()),
-    );
-    if (!pool) return null;
-    return fetchHistoricalApy(pool.pool, days);
-  } catch (e) {
-    console.warn("[Morpho historical]", e);
     return null;
   }
 }
