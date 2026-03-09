@@ -1,4 +1,4 @@
-import { MORPHO_API, AAVE_API, CURATORS_URL, LLAMA_POOLS_URL, NETWORKS } from "./constants";
+import { MORPHO_API, AAVE_API, CURATORS_URL, LLAMA_POOLS_URL, LLAMA_CHART_URL, NETWORKS } from "./constants";
 import { getColor } from "./colors";
 import type { VaultEntry, CuratorMeta, CuratorRaw, AaveReserve, CollateralAsset } from "./types";
 
@@ -267,4 +267,79 @@ export async function fetchAaveCollateral(chainId: number): Promise<AaveReserve[
   }
 
   return null;
+}
+
+// ── DeFi Llama historical yields ──
+
+// Cache pool list to avoid re-fetching
+let llamaAllPools: { pool: string; project: string; chain: string; symbol: string; underlyingTokens?: string[] }[] | null = null;
+
+async function getLlamaPools(): Promise<typeof llamaAllPools> {
+  if (llamaAllPools) return llamaAllPools;
+  const res = await fetchWithTimeout(LLAMA_POOLS_URL, {}, 8000);
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  const json = await res.json();
+  llamaAllPools = json.data;
+  return llamaAllPools;
+}
+
+export async function fetchHistoricalApy(poolId: string, days: number): Promise<number | null> {
+  try {
+    const res = await fetchWithTimeout(`${LLAMA_CHART_URL}/${poolId}`, {}, 8000);
+    if (!res.ok) return null;
+    const json = await res.json();
+    const dataPoints: { timestamp: string; apy: number }[] = json.data ?? [];
+    if (dataPoints.length === 0) return null;
+
+    const cutoff = Date.now() - days * 86400_000;
+    const recent = dataPoints.filter((d) => new Date(d.timestamp).getTime() >= cutoff);
+    const subset = recent.length > 0 ? recent : dataPoints.slice(-days);
+    if (subset.length === 0) return null;
+
+    const avg = subset.reduce((s, d) => s + d.apy, 0) / subset.length;
+    return avg;
+  } catch (e) {
+    console.warn("[DeFi Llama chart]", poolId, e);
+    return null;
+  }
+}
+
+export async function fetchMorphoHistoricalApy(
+  vaultAddress: string,
+  chainId: number,
+  days: number,
+): Promise<number | null> {
+  try {
+    const pools = await getLlamaPools();
+    if (!pools) return null;
+    const net = NETWORKS[chainId] || NETWORKS[1];
+    // Morpho vaults appear as "morpho-blue" on DeFi Llama
+    const pool = pools.find(
+      (p) =>
+        p.project === "morpho-blue" &&
+        p.chain === net.llamaChain &&
+        p.pool?.toLowerCase().includes(vaultAddress.toLowerCase()),
+    );
+    if (!pool) return null;
+    return fetchHistoricalApy(pool.pool, days);
+  } catch (e) {
+    console.warn("[Morpho historical]", e);
+    return null;
+  }
+}
+
+export async function fetchAaveHistoricalApy(chainId: number, days: number): Promise<number | null> {
+  try {
+    const pools = await getLlamaPools();
+    if (!pools) return null;
+    const net = NETWORKS[chainId] || NETWORKS[1];
+    const pool = pools.find(
+      (p) => p.project === "aave-v3" && p.chain === net.llamaChain && p.symbol === "USDC",
+    );
+    if (!pool) return null;
+    return fetchHistoricalApy(pool.pool, days);
+  } catch (e) {
+    console.warn("[Aave historical]", e);
+    return null;
+  }
 }

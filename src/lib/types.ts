@@ -51,6 +51,8 @@ export interface AaveReserve {
   pct: number;
 }
 
+export type YieldDuration = "instant" | "7d" | "30d" | "90d";
+
 export interface AssetMetaEntry {
   display: string;
   name: string;

@@ -2,16 +2,19 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { DEFAULT_CHAIN_ID, NETWORKS } from "@/lib/constants";
+import type { YieldDuration } from "@/lib/types";
 import { buildCuratorAddresses } from "@/lib/api";
 import { useMorphoVaults } from "@/hooks/useMorphoVaults";
 import { useAaveData } from "@/hooks/useAaveData";
 import NetworkSelector from "@/components/NetworkSelector";
+import DurationSelector from "@/components/DurationSelector";
 import YieldCards from "@/components/YieldCards";
 import CollateralCards from "@/components/CollateralCards";
 import Footer from "@/components/Footer";
 
 export default function Home() {
   const [chainId, setChainId] = useState(DEFAULT_CHAIN_ID);
+  const [duration, setDuration] = useState<YieldDuration>("instant");
   const [statusColor, setStatusColor] = useState("#aeaeb2");
   const [statusText, setStatusText] = useState("Loading live data\u2026");
   const [fading, setFading] = useState(false);
@@ -22,13 +25,13 @@ export default function Home() {
   const { apy: aaveApy, reserves: aaveReserves, loadAaveData, resetAave } = useAaveData();
 
   const fetchLiveData = useCallback(
-    async (cid: number) => {
+    async (cid: number, dur: YieldDuration = "instant") => {
       const [morphoOk, aaveResult] = await Promise.all([
-        loadVaults(cid).catch((e) => {
+        loadVaults(cid, dur).catch((e) => {
           console.warn("[Morpho vaults]", e);
           return false;
         }),
-        loadAaveData(cid).catch((e) => {
+        loadAaveData(cid, dur).catch((e) => {
           console.warn("[Aave]", e);
           return { rateOk: false, collateralOk: false };
         }),
@@ -52,7 +55,7 @@ export default function Home() {
 
   // Initial load
   useEffect(() => {
-    fetchLiveData(chainId);
+    fetchLiveData(chainId, duration);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -64,9 +67,21 @@ export default function Home() {
       setStatusColor("#aeaeb2");
       setStatusText("Loading live data\u2026");
       buildCuratorAddresses(newChainId);
-      await fetchLiveData(newChainId);
+      await fetchLiveData(newChainId, duration);
     },
-    [chainId, resetAave, fetchLiveData]
+    [chainId, duration, resetAave, fetchLiveData]
+  );
+
+  const handleDurationSwitch = useCallback(
+    async (newDuration: YieldDuration) => {
+      if (newDuration === duration) return;
+      setDuration(newDuration);
+      resetAave();
+      setStatusColor("#aeaeb2");
+      setStatusText("Loading live data\u2026");
+      await fetchLiveData(chainId, newDuration);
+    },
+    [chainId, duration, resetAave, fetchLiveData]
   );
 
   const handleSelectVault = useCallback(
@@ -99,6 +114,7 @@ export default function Home() {
         <div className="section">
           <div className="section-header">
             <span className="section-title">Supply Yield</span>
+            <DurationSelector current={duration} onSwitch={handleDurationSwitch} />
             <NetworkSelector currentChainId={chainId} onSwitch={handleNetworkSwitch} />
           </div>
           <YieldCards
@@ -109,6 +125,7 @@ export default function Home() {
             getCurators={getCurators}
             onSelectVault={handleSelectVault}
             aaveApy={aaveApy}
+            duration={duration}
           />
         </div>
 

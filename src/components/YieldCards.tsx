@@ -1,7 +1,7 @@
 "use client";
 
-import { NETWORKS } from "@/lib/constants";
-import type { VaultEntry, CuratorGroup } from "@/lib/types";
+import { NETWORKS, DURATION_OPTIONS } from "@/lib/constants";
+import type { VaultEntry, CuratorGroup, YieldDuration } from "@/lib/types";
 import VaultSelector from "./VaultSelector";
 
 interface YieldCardsProps {
@@ -12,6 +12,7 @@ interface YieldCardsProps {
   getCurators: () => CuratorGroup[];
   onSelectVault: (index: number) => void;
   aaveApy: string;
+  duration: YieldDuration;
 }
 
 export default function YieldCards({
@@ -22,9 +23,12 @@ export default function YieldCards({
   getCurators,
   onSelectVault,
   aaveApy,
+  duration,
 }: YieldCardsProps) {
   const net = NETWORKS[chainId] || NETWORKS[1];
   const aaveLink = `https://app.aave.com/reserve-overview/?underlyingAsset=${net.usdcAddress}&marketName=${net.aaveMarketName}`;
+  const durationLabel = DURATION_OPTIONS.find((d) => d.key === duration)?.label;
+  const apyLabel = duration === "instant" ? "APY" : `Avg ${durationLabel} APY`;
 
   return (
     <div className="yield-row">
@@ -42,6 +46,7 @@ export default function YieldCards({
           </div>
           <div className="vault-label">{morphoVault.name}</div>
           <div className="apy">{morphoVault.apy}</div>
+          <div className="apy-label">{apyLabel}</div>
         </a>
       </div>
 
@@ -54,6 +59,7 @@ export default function YieldCards({
           </div>
           <div className="vault-label">USDC Market</div>
           <div className="apy">{aaveApy}</div>
+          <div className="apy-label">{apyLabel}</div>
         </a>
       </div>
     </div>

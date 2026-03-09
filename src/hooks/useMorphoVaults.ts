@@ -1,15 +1,16 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { NETWORKS } from "@/lib/constants";
+import { NETWORKS, DURATION_OPTIONS } from "@/lib/constants";
 import {
   fetchAllMorphoVaults,
   fetchCuratorsListing,
   buildVaultEntry,
   buildCuratorAddresses,
   getCuratorMetaRaw,
+  fetchMorphoHistoricalApy,
 } from "@/lib/api";
-import type { VaultEntry, CuratorGroup } from "@/lib/types";
+import type { VaultEntry, CuratorGroup, YieldDuration } from "@/lib/types";
 
 const DEFAULT_VAULT: VaultEntry = {
   name: "Steakhouse USDC",
@@ -31,7 +32,7 @@ export function useMorphoVaults() {
 
   const currentVault = vaults[currentVaultIndex] || vaults[0] || DEFAULT_VAULT;
 
-  const loadVaults = useCallback(async (chainId: number) => {
+  const loadVaults = useCallback(async (chainId: number, duration: YieldDuration = "instant") => {
     try {
       const fetches: Promise<unknown>[] = [fetchAllMorphoVaults(chainId)];
       if (getCuratorMetaRaw().length === 0) {
@@ -43,13 +44,26 @@ export function useMorphoVaults() {
       const apiVaults = results[0] as unknown[];
 
       if (apiVaults?.length > 0) {
-        const entries = apiVaults
+        let entries = apiVaults
           .map((v) => buildVaultEntry(v, chainId))
           .filter((v) => v.curator !== "Uncurated" && v.totalAssetsUsd > 0 && v.assetSymbol === "USDC")
           .sort((a, b) => b.totalAssetsUsd - a.totalAssetsUsd);
 
+        // Overlay historical APY if needed
+        const days = DURATION_OPTIONS.find((d) => d.key === duration)?.days ?? 0;
+        if (days > 0 && entries.length > 0) {
+          const historicalApys = await Promise.all(
+            entries.map((v) =>
+              fetchMorphoHistoricalApy(v.address, chainId, days).catch(() => null),
+            ),
+          );
+          entries = entries.map((v, i) => ({
+            ...v,
+            apy: historicalApys[i] != null ? historicalApys[i]!.toFixed(2) + "%" : v.apy,
+          }));
+        }
+
         if (entries.length > 0) {
-          // Prefer Steakhouse Prime vault as default
           const preferred = NETWORKS[chainId]?.preferredVault;
           const preferredIdx = preferred
             ? entries.findIndex((v) => v.address.toLowerCase() === preferred.toLowerCase())

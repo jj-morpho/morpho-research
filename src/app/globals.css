@@ -146,6 +146,37 @@ body {
   color: #ffffff;
 }
 
+/* ── Duration Selector ── */
+.duration-selector {
+  display: flex;
+  gap: 4px;
+}
+
+.duration-btn {
+  border: 1px solid #e5e5ea;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  color: #86868b;
+  padding: 4px 10px;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.duration-btn:hover {
+  border-color: #c7c7cc;
+  color: #1d1d1f;
+}
+
+.duration-btn.active {
+  background: #1d1d1f;
+  border-color: #1d1d1f;
+  color: #ffffff;
+}
+
 .yield-card .vault-label {
   font-size: 13px;
   color: #86868b;
@@ -157,6 +188,14 @@ body {
   font-weight: 700;
   line-height: 1;
   margin-bottom: 6px;
+}
+
+.yield-card .apy-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #86868b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .yield-card.morpho .protocol-name { color: #2470ff; }
