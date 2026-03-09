@@ -19,7 +19,7 @@ export default function VaultSelector({ vaults, currentVaultIndex, getCurators, 
   const [selectedCurator, setSelectedCurator] = useState<string | null>(null);
   const [curatorFilter, setCuratorFilter] = useState("");
   const [vaultFilter, setVaultFilter] = useState("");
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const curatorInputRef = useRef<HTMLInputElement>(null);
   const vaultInputRef = useRef<HTMLInputElement>(null);
 
@@ -30,11 +30,15 @@ export default function VaultSelector({ vaults, currentVaultIndex, getCurators, 
     setVaultFilter("");
   }, []);
 
-  // Close on outside click
+  // Close on outside click — use mousedown + ref containment (reliable with React 19)
   useEffect(() => {
-    const handler = () => close();
-    document.addEventListener("click", handler);
-    return () => document.removeEventListener("click", handler);
+    const handler = (e: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        close();
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, [close]);
 
   // Focus search on panel switch
@@ -59,11 +63,10 @@ export default function VaultSelector({ vaults, currentVaultIndex, getCurators, 
     : [];
 
   return (
-    <div className="vault-selector" onClick={(e) => e.stopPropagation()}>
+    <div className="vault-selector" ref={wrapperRef}>
       <button
         className={`vault-selector-btn${isOpen ? " open" : ""}`}
-        onClick={(e) => {
-          e.stopPropagation();
+        onClick={() => {
           if (isOpen) close();
           else {
             setIsOpen(true);
@@ -74,7 +77,7 @@ export default function VaultSelector({ vaults, currentVaultIndex, getCurators, 
         Select Vault <span className="chevron">&#9662;</span>
       </button>
 
-      <div ref={dropdownRef} className={`vault-dropdown${isOpen ? " show" : ""}`} onClick={(e) => e.stopPropagation()}>
+      <div className={`vault-dropdown${isOpen ? " show" : ""}`}>
         {/* Curator panel */}
         {!selectedCurator && (
           <div id="curatorPanel">

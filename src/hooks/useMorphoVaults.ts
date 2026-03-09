@@ -1,14 +1,13 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { NETWORKS, DURATION_OPTIONS } from "@/lib/constants";
+import { NETWORKS } from "@/lib/constants";
 import {
   fetchAllMorphoVaults,
   fetchCuratorsListing,
   buildVaultEntry,
   buildCuratorAddresses,
   getCuratorMetaRaw,
-  fetchMorphoHistoricalApy,
 } from "@/lib/api";
 import type { VaultEntry, CuratorGroup, YieldDuration } from "@/lib/types";
 
@@ -45,24 +44,10 @@ export function useMorphoVaults() {
       const apiVaults = results[0] as unknown[];
 
       if (apiVaults?.length > 0) {
-        let entries = apiVaults
-          .map((v) => buildVaultEntry(v, chainId))
+        const entries = apiVaults
+          .map((v) => buildVaultEntry(v, chainId, duration))
           .filter((v) => v.curator !== "Uncurated" && v.totalAssetsUsd > 0 && v.assetSymbol === "USDC")
           .sort((a, b) => b.totalAssetsUsd - a.totalAssetsUsd);
-
-        // Overlay historical APY if needed
-        const days = DURATION_OPTIONS.find((d) => d.key === duration)?.days ?? 0;
-        if (days > 0 && entries.length > 0) {
-          const historicalApys = await Promise.all(
-            entries.map((v) =>
-              fetchMorphoHistoricalApy(v.address, chainId, days).catch(() => null),
-            ),
-          );
-          entries = entries.map((v, i) => ({
-            ...v,
-            apy: historicalApys[i] != null ? historicalApys[i]!.toFixed(2) + "%" : v.apy,
-          }));
-        }
 
         if (entries.length > 0) {
           const preferred = NETWORKS[chainId]?.preferredVault;
