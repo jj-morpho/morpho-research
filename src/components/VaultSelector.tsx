@@ -162,7 +162,7 @@ export default function VaultSelector({ vaults, currentVaultIndex, getCurators, 
                 <div className="dropdown-empty">No vaults found</div>
               ) : (
                 filteredVaults.map((v) => {
-                  const idx = vaults.indexOf(v);
+                  const idx = vaults.findIndex((w) => w.address === v.address);
                   const isSelected = idx === currentVaultIndex;
                   const initials = (curatorGroup?.name || "").substring(0, 2).toUpperCase();
                   return (

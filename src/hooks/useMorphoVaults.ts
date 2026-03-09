@@ -38,9 +38,10 @@ export function useMorphoVaults() {
       if (getCuratorMetaRaw().length === 0) {
         fetches.push(fetchCuratorsListing().catch((e) => console.warn("[Curator listing]", e)));
       }
-      buildCuratorAddresses(chainId);
 
       const results = await Promise.all(fetches);
+      // Build curator addresses AFTER curators are fetched so vaults get proper curator labels
+      buildCuratorAddresses(chainId);
       const apiVaults = results[0] as unknown[];
 
       if (apiVaults?.length > 0) {
