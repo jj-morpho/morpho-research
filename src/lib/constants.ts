@@ -66,3 +66,12 @@ export const NETWORKS: Record<number, Network> = {
 };
 
 export const DEFAULT_CHAIN_ID = 1;
+
+export const DURATION_OPTIONS: { key: import("./types").YieldDuration; label: string; days: number }[] = [
+  { key: "instant", label: "Instant", days: 0 },
+  { key: "7d", label: "7D", days: 7 },
+  { key: "30d", label: "30D", days: 30 },
+  { key: "90d", label: "90D", days: 90 },
+];
+
+export const LLAMA_CHART_URL = "https://yields.llama.fi/chart";
