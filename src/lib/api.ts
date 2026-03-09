@@ -1,6 +1,6 @@
 import { MORPHO_API, AAVE_API, CURATORS_URL, LLAMA_POOLS_URL, LLAMA_CHART_URL, NETWORKS } from "./constants";
 import { getColor } from "./colors";
-import type { VaultEntry, CuratorMeta, CuratorRaw, AaveReserve, CollateralAsset } from "./types";
+import type { VaultEntry, CuratorMeta, CuratorRaw, AaveReserve, CollateralAsset, YieldDuration } from "./types";
 
 // ── Helpers ──
 
@@ -46,7 +46,7 @@ function findCuratorForAddress(addr: string | null): CuratorMeta | null {
 // ── Morpho vaults ──
 
 export async function fetchAllMorphoVaults(chainId: number): Promise<unknown[]> {
-  const query = `{ vaults(where: { chainId_in: [${chainId}] }, first: 500) { items { address name state { netApy curator totalAssetsUsd allocation { supplyAssetsUsd market { uniqueKey collateralAsset { symbol name } } } } asset { symbol } } } }`;
+  const query = `{ vaults(where: { chainId_in: [${chainId}] }, first: 500) { items { address name state { netApy weeklyNetApy monthlyNetApy curator totalAssetsUsd allocation { supplyAssetsUsd market { uniqueKey collateralAsset { symbol name } } } } asset { symbol } } } }`;
   const res = await fetch(MORPHO_API, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -58,8 +58,15 @@ export async function fetchAllMorphoVaults(chainId: number): Promise<unknown[]> 
   return json.data?.vaults?.items || [];
 }
 
+const DURATION_APY_FIELD: Record<YieldDuration, string> = {
+  instant: "netApy",
+  "7d": "weeklyNetApy",
+  "30d": "monthlyNetApy",
+  "90d": "monthlyNetApy", // best available approximation
+};
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function buildVaultEntry(v: any, chainId: number): VaultEntry {
+export function buildVaultEntry(v: any, chainId: number, duration: YieldDuration = "instant"): VaultEntry {
   const net = NETWORKS[chainId] || NETWORKS[1];
   const curatorAddr = v.state?.curator ?? null;
   const curator = findCuratorForAddress(curatorAddr);
@@ -67,8 +74,10 @@ export function buildVaultEntry(v: any, chainId: number): VaultEntry {
   const curatorImage = curator ? curator.image : "";
 
   let apy = "\u2013";
-  if (v.state?.netApy != null) {
-    apy = (v.state.netApy * 100).toFixed(2) + "%";
+  const field = DURATION_APY_FIELD[duration];
+  const raw = v.state?.[field] ?? v.state?.netApy;
+  if (raw != null) {
+    apy = (raw * 100).toFixed(2) + "%";
   }
 
   let collateral: CollateralAsset[] = [];
