@@ -1,6 +1,6 @@
 import type { Network } from "./types";
 
-export const MORPHO_API = "https://blue-api.morpho.org/graphql";
+export const MORPHO_API = "https://api.morpho.org/graphql";
 export const AAVE_API = "https://api.v3.aave.com/graphql";
 export const CURATORS_URL =
   "https://raw.githubusercontent.com/morpho-org/morpho-blue-api-metadata/main/data/curators-listing.json";
