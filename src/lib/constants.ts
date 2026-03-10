@@ -68,7 +68,7 @@ export const NETWORKS: Record<number, Network> = {
     },
   },
   10: {
-    name: "Optimism",
+    name: "OP Mainnet",
     morphoChainId: 10,
     aaveMarketFilter: (m) => {
       const n = (m.name || "").toLowerCase();
