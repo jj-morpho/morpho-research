@@ -49,8 +49,12 @@ body {
 .section-header {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   margin-bottom: 20px;
+}
+
+.section-header .mini-dropdown:last-child {
+  margin-left: auto;
 }
 
 .section-title {
@@ -113,52 +117,21 @@ body {
   vertical-align: middle;
 }
 
-/* ── Network Selector ── */
-.network-selector {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-left: auto;
+/* ── Mini Dropdowns (Asset / Duration / Network) ── */
+.mini-dropdown {
+  position: relative;
 }
 
-.network-btn {
+.mini-dropdown-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   border: 1px solid #e5e5ea;
   background: #ffffff;
   font-family: inherit;
   font-size: 12px;
   font-weight: 500;
-  color: #86868b;
-  padding: 4px 12px;
-  border-radius: 100px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  white-space: nowrap;
-}
-
-.network-btn:hover {
-  border-color: #c7c7cc;
   color: #1d1d1f;
-}
-
-.network-btn.active {
-  background: #1d1d1f;
-  border-color: #1d1d1f;
-  color: #ffffff;
-}
-
-/* ── Asset Selector ── */
-.asset-selector {
-  display: flex;
-  gap: 4px;
-}
-
-.asset-btn {
-  border: 1px solid #e5e5ea;
-  background: #ffffff;
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 500;
-  color: #86868b;
   padding: 4px 10px;
   border-radius: 100px;
   cursor: pointer;
@@ -166,46 +139,60 @@ body {
   white-space: nowrap;
 }
 
-.asset-btn:hover {
+.mini-dropdown-btn:hover {
   border-color: #c7c7cc;
-  color: #1d1d1f;
 }
 
-.asset-btn.active {
-  background: #1d1d1f;
-  border-color: #1d1d1f;
-  color: #ffffff;
-}
-
-/* ── Duration Selector ── */
-.duration-selector {
-  display: flex;
-  gap: 4px;
-}
-
-.duration-btn {
-  border: 1px solid #e5e5ea;
-  background: #ffffff;
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 500;
+.mini-dropdown-btn .chevron {
+  font-size: 9px;
   color: #86868b;
-  padding: 4px 10px;
-  border-radius: 100px;
+  transition: transform 0.2s ease;
+}
+
+.mini-dropdown-btn.open .chevron {
+  transform: rotate(180deg);
+}
+
+.mini-dropdown-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 120px;
+  background: #ffffff;
+  border: 1px solid #e5e5ea;
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.10);
+  z-index: 50;
+  list-style: none;
+  padding: 4px 0;
+  margin: 0;
+}
+
+.mini-dropdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1d1d1f;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background 0.1s ease;
   white-space: nowrap;
 }
 
-.duration-btn:hover {
-  border-color: #c7c7cc;
-  color: #1d1d1f;
+.mini-dropdown-item:hover {
+  background: #f5f5f7;
 }
 
-.duration-btn.active {
-  background: #1d1d1f;
-  border-color: #1d1d1f;
-  color: #ffffff;
+.mini-dropdown-item.selected {
+  color: #2470ff;
+}
+
+.mini-dropdown-item .item-check {
+  margin-left: 10px;
+  font-size: 12px;
+  color: #2470ff;
 }
 
 .yield-card .vault-label {

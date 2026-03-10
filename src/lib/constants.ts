@@ -28,6 +28,7 @@ export const NETWORKS: Record<number, Network> = {
     },
     preferredVaults: {
       USDC: "0xBEEF01735c132Ada46AA9aA4c54623cAA92A64CB",
+      USDT: "0x8CB3649114051cA5119141a34C200D65dc0Faa73",
     },
   },
   8453: {
