@@ -1,6 +1,6 @@
 import { MORPHO_API, AAVE_API, CURATORS_URL, LLAMA_POOLS_URL, LLAMA_CHART_URL, NETWORKS } from "./constants";
 import { getColor } from "./colors";
-import type { VaultEntry, CuratorMeta, CuratorRaw, AaveReserve, CollateralAsset, YieldDuration } from "./types";
+import type { VaultEntry, CuratorMeta, CuratorRaw, AaveReserve, CollateralAsset, YieldDuration, AssetSymbol } from "./types";
 
 // ── Helpers ──
 
@@ -134,7 +134,7 @@ export function clearLlamaCache() {
   llamaAavePools = null;
 }
 
-export async function fetchAaveRate(chainId: number): Promise<number | null> {
+export async function fetchAaveRate(chainId: number, asset: AssetSymbol = "USDC"): Promise<number | null> {
   const net = NETWORKS[chainId] || NETWORKS[1];
 
   // Try Aave GraphQL
@@ -151,9 +151,9 @@ export async function fetchAaveRate(chainId: number): Promise<number | null> {
         const market = json.data.markets.find(net.aaveMarketFilter);
         if (market?.supplyReserves) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const usdcReserve = market.supplyReserves.find((r: any) => r.underlyingToken?.symbol === "USDC");
-          if (usdcReserve?.supplyRate != null) {
-            return parseFloat(usdcReserve.supplyRate) * 100;
+          const reserve = market.supplyReserves.find((r: any) => r.underlyingToken?.symbol === asset);
+          if (reserve?.supplyRate != null) {
+            return parseFloat(reserve.supplyRate) * 100;
           }
         }
       }
@@ -172,7 +172,7 @@ export async function fetchAaveRate(chainId: number): Promise<number | null> {
       (p: any) => p.project === "aave-v3" && p.chain === net.llamaChain
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pool = llamaAavePools!.find((p: any) => p.symbol === "USDC");
+    const pool = llamaAavePools!.find((p: any) => p.symbol === asset);
     if (pool?.apyBase != null) return pool.apyBase;
   } catch (e) {
     console.warn("[DeFi Llama rate]", e);
@@ -181,7 +181,7 @@ export async function fetchAaveRate(chainId: number): Promise<number | null> {
   return null;
 }
 
-export async function fetchAaveCollateral(chainId: number): Promise<AaveReserve[] | null> {
+export async function fetchAaveCollateral(chainId: number, asset: AssetSymbol = "USDC"): Promise<AaveReserve[] | null> {
   const net = NETWORKS[chainId] || NETWORKS[1];
 
   // Try Aave GraphQL
@@ -201,7 +201,7 @@ export async function fetchAaveCollateral(chainId: number): Promise<AaveReserve[
     if (!market?.supplyReserves) throw new Error(net.name + " core market not found");
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const nonUsdc = market.supplyReserves.filter((r: any) => r.underlyingToken?.symbol !== "USDC");
+    const nonUsdc = market.supplyReserves.filter((r: any) => r.underlyingToken?.symbol !== asset);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const totalUsd = nonUsdc.reduce((s: number, r: any) => s + (parseFloat(r.size.usdValue) || 0), 0);
     if (!totalUsd || totalUsd <= 0) throw new Error("Invalid total");
@@ -244,7 +244,7 @@ export async function fetchAaveCollateral(chainId: number): Promise<AaveReserve[
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pools = llamaAavePools!.filter((p: any) => p.symbol !== "USDC");
+    const pools = llamaAavePools!.filter((p: any) => p.symbol !== asset);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const totalTvl = pools.reduce((s: number, p: any) => s + (p.tvlUsd || 0), 0);
     if (!totalTvl) throw new Error("Zero TVL");
@@ -312,13 +312,13 @@ async function fetchHistoricalApy(poolId: string, days: number): Promise<number 
   }
 }
 
-export async function fetchAaveHistoricalApy(chainId: number, days: number): Promise<number | null> {
+export async function fetchAaveHistoricalApy(chainId: number, days: number, asset: AssetSymbol = "USDC"): Promise<number | null> {
   try {
     const pools = await getLlamaPools();
     if (!pools) return null;
     const net = NETWORKS[chainId] || NETWORKS[1];
     const pool = pools.find(
-      (p) => p.project === "aave-v3" && p.chain === net.llamaChain && p.symbol === "USDC",
+      (p) => p.project === "aave-v3" && p.chain === net.llamaChain && p.symbol === asset,
     );
     if (!pool) return null;
     return fetchHistoricalApy(pool.pool, days);

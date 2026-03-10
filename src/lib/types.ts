@@ -1,3 +1,5 @@
+export type AssetSymbol = "USDC" | "USDT";
+
 export interface Network {
   name: string;
   morphoChainId: number;
@@ -5,8 +7,8 @@ export interface Network {
   llamaChain: string;
   aaveMarketName: string;
   morphoApp: string;
-  usdcAddress: string;
-  preferredVault?: string;
+  assetAddresses: Record<AssetSymbol, string>;
+  preferredVaults?: Partial<Record<AssetSymbol, string>>;
 }
 
 export interface CollateralAsset {

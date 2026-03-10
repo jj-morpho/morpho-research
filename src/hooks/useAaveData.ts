@@ -2,29 +2,29 @@
 
 import { useState, useCallback } from "react";
 import { fetchAaveRate, fetchAaveCollateral, fetchAaveHistoricalApy, clearLlamaCache } from "@/lib/api";
-import type { AaveReserve, YieldDuration } from "@/lib/types";
+import type { AaveReserve, YieldDuration, AssetSymbol } from "@/lib/types";
 import { DURATION_OPTIONS } from "@/lib/constants";
 
 export function useAaveData() {
   const [apy, setApy] = useState("\u2013");
   const [reserves, setReserves] = useState<AaveReserve[] | null>(null);
 
-  const loadAaveData = useCallback(async (chainId: number, duration: YieldDuration = "instant") => {
+  const loadAaveData = useCallback(async (chainId: number, duration: YieldDuration = "instant", asset: AssetSymbol = "USDC") => {
     clearLlamaCache();
 
     const days = DURATION_OPTIONS.find((d) => d.key === duration)?.days ?? 0;
 
     const [rate, collateral] = await Promise.all([
       days > 0
-        ? fetchAaveHistoricalApy(chainId, days).catch((e) => {
+        ? fetchAaveHistoricalApy(chainId, days, asset).catch((e) => {
             console.warn("[Aave historical rate]", e);
             return null;
           })
-        : fetchAaveRate(chainId).catch((e) => {
+        : fetchAaveRate(chainId, asset).catch((e) => {
             console.warn("[Aave rate]", e);
             return null;
           }),
-      fetchAaveCollateral(chainId).catch((e) => {
+      fetchAaveCollateral(chainId, asset).catch((e) => {
         console.warn("[Aave collateral]", e);
         return null;
       }),

@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { DEFAULT_CHAIN_ID, NETWORKS } from "@/lib/constants";
-import type { YieldDuration } from "@/lib/types";
+import { DEFAULT_CHAIN_ID, DEFAULT_ASSET, NETWORKS } from "@/lib/constants";
+import type { YieldDuration, AssetSymbol } from "@/lib/types";
 import { buildCuratorAddresses } from "@/lib/api";
 import { useMorphoVaults } from "@/hooks/useMorphoVaults";
 import { useAaveData } from "@/hooks/useAaveData";
 import NetworkSelector from "@/components/NetworkSelector";
 import DurationSelector from "@/components/DurationSelector";
+import AssetSelector from "@/components/AssetSelector";
 import YieldCards from "@/components/YieldCards";
 import CollateralCards from "@/components/CollateralCards";
 import Footer from "@/components/Footer";
@@ -15,23 +16,24 @@ import Footer from "@/components/Footer";
 export default function Home() {
   const [chainId, setChainId] = useState(DEFAULT_CHAIN_ID);
   const [duration, setDuration] = useState<YieldDuration>("instant");
+  const [asset, setAsset] = useState<AssetSymbol>(DEFAULT_ASSET);
   const [statusColor, setStatusColor] = useState("#aeaeb2");
   const [statusText, setStatusText] = useState("Loading live data\u2026");
   const [fading, setFading] = useState(false);
   const prevVaultRef = useRef(-1);
 
-  const { vaults, currentVault, currentVaultIndex, allLoaded, loadVaults, rebuildForDuration, selectVault, getCurators } =
+  const { vaults, currentVault, currentVaultIndex, allLoaded, loadVaults, rebuildFromCache, selectVault, getCurators } =
     useMorphoVaults();
   const { apy: aaveApy, reserves: aaveReserves, loadAaveData, resetAave } = useAaveData();
 
   const fetchLiveData = useCallback(
-    async (cid: number, dur: YieldDuration = "instant") => {
+    async (cid: number, dur: YieldDuration = "instant", ast: AssetSymbol = "USDC") => {
       const [morphoOk, aaveResult] = await Promise.all([
-        loadVaults(cid, dur).catch((e) => {
+        loadVaults(cid, dur, ast).catch((e) => {
           console.warn("[Morpho vaults]", e);
           return false;
         }),
-        loadAaveData(cid, dur).catch((e) => {
+        loadAaveData(cid, dur, ast).catch((e) => {
           console.warn("[Aave]", e);
           return { rateOk: false, collateralOk: false };
         }),
@@ -55,7 +57,7 @@ export default function Home() {
 
   // Initial load
   useEffect(() => {
-    fetchLiveData(chainId, duration);
+    fetchLiveData(chainId, duration, asset);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -67,9 +69,9 @@ export default function Home() {
       setStatusColor("#aeaeb2");
       setStatusText("Loading live data\u2026");
       buildCuratorAddresses(newChainId);
-      await fetchLiveData(newChainId, duration);
+      await fetchLiveData(newChainId, duration, asset);
     },
-    [chainId, duration, resetAave, fetchLiveData]
+    [chainId, duration, asset, resetAave, fetchLiveData]
   );
 
   const handleDurationSwitch = useCallback(
@@ -78,11 +80,11 @@ export default function Home() {
       setDuration(newDuration);
 
       // Morpho: rebuild from cached raw data — instant, no API call
-      rebuildForDuration(newDuration);
+      rebuildFromCache(newDuration, asset);
 
       // Aave: re-fetch with new duration
       resetAave();
-      const aaveResult = await loadAaveData(chainId, newDuration).catch((e) => {
+      const aaveResult = await loadAaveData(chainId, newDuration, asset).catch((e) => {
         console.warn("[Aave]", e);
         return { rateOk: false, collateralOk: false };
       });
@@ -90,7 +92,28 @@ export default function Home() {
       setStatusColor(aaveOk ? "#22c55e" : "#f59e0b");
       setStatusText(aaveOk ? "Live data \u00b7 Updated just now" : "Partial live data \u00b7 Some sources unavailable");
     },
-    [chainId, duration, rebuildForDuration, resetAave, loadAaveData]
+    [chainId, duration, asset, rebuildFromCache, resetAave, loadAaveData]
+  );
+
+  const handleAssetSwitch = useCallback(
+    async (newAsset: AssetSymbol) => {
+      if (newAsset === asset) return;
+      setAsset(newAsset);
+
+      // Morpho: rebuild from cached raw data — instant, no API call
+      rebuildFromCache(duration, newAsset);
+
+      // Aave: re-fetch with new asset
+      resetAave();
+      const aaveResult = await loadAaveData(chainId, duration, newAsset).catch((e) => {
+        console.warn("[Aave]", e);
+        return { rateOk: false, collateralOk: false };
+      });
+      const aaveOk = typeof aaveResult === "object" && (aaveResult.rateOk || aaveResult.collateralOk);
+      setStatusColor(aaveOk ? "#22c55e" : "#f59e0b");
+      setStatusText(aaveOk ? "Live data \u00b7 Updated just now" : "Partial live data \u00b7 Some sources unavailable");
+    },
+    [chainId, duration, asset, rebuildFromCache, resetAave, loadAaveData]
   );
 
   const handleSelectVault = useCallback(
@@ -123,6 +146,7 @@ export default function Home() {
         <div className="section">
           <div className="section-header">
             <span className="section-title">Supply Yield</span>
+            <AssetSelector current={asset} onSwitch={handleAssetSwitch} />
             <DurationSelector current={duration} onSwitch={handleDurationSwitch} />
             <NetworkSelector currentChainId={chainId} onSwitch={handleNetworkSwitch} />
           </div>
@@ -135,6 +159,7 @@ export default function Home() {
             onSelectVault={handleSelectVault}
             aaveApy={aaveApy}
             duration={duration}
+            asset={asset}
           />
         </div>
 
