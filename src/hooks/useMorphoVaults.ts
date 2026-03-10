@@ -9,7 +9,7 @@ import {
   buildCuratorAddresses,
   getCuratorMetaRaw,
 } from "@/lib/api";
-import type { VaultEntry, CuratorGroup, YieldDuration } from "@/lib/types";
+import type { VaultEntry, CuratorGroup, YieldDuration, AssetSymbol } from "@/lib/types";
 
 const DEFAULT_VAULT: VaultEntry = {
   name: "Steakhouse USDC",
@@ -34,14 +34,14 @@ export function useMorphoVaults() {
 
   const currentVault = vaults[currentVaultIndex] || vaults[0] || DEFAULT_VAULT;
 
-  const buildEntries = useCallback((apiVaults: unknown[], chainId: number, duration: YieldDuration) => {
+  const buildEntries = useCallback((apiVaults: unknown[], chainId: number, duration: YieldDuration, asset: AssetSymbol = "USDC") => {
     return apiVaults
       .map((v) => buildVaultEntry(v, chainId, duration))
-      .filter((v) => v.curator !== "Uncurated" && v.totalAssetsUsd > 0 && v.assetSymbol === "USDC")
+      .filter((v) => v.curator !== "Uncurated" && v.totalAssetsUsd > 0 && v.assetSymbol === asset)
       .sort((a, b) => b.totalAssetsUsd - a.totalAssetsUsd);
   }, []);
 
-  const loadVaults = useCallback(async (chainId: number, duration: YieldDuration = "instant") => {
+  const loadVaults = useCallback(async (chainId: number, duration: YieldDuration = "instant", asset: AssetSymbol = "USDC") => {
     try {
       const fetches: Promise<unknown>[] = [fetchAllMorphoVaults(chainId)];
       if (getCuratorMetaRaw().length === 0) {
@@ -57,10 +57,10 @@ export function useMorphoVaults() {
         // Cache the raw data for instant duration rebuilds
         rawCacheRef.current = { chainId, data: apiVaults };
 
-        const entries = buildEntries(apiVaults, chainId, duration);
+        const entries = buildEntries(apiVaults, chainId, duration, asset);
 
         if (entries.length > 0) {
-          const preferred = NETWORKS[chainId]?.preferredVault;
+          const preferred = NETWORKS[chainId]?.preferredVaults?.[asset];
           const preferredIdx = preferred
             ? entries.findIndex((v) => v.address.toLowerCase() === preferred.toLowerCase())
             : -1;
@@ -81,19 +81,24 @@ export function useMorphoVaults() {
     return false;
   }, [buildEntries]);
 
-  // Rebuild vault entries from cache with a new duration — no API call needed
-  const rebuildForDuration = useCallback((duration: YieldDuration) => {
+  // Rebuild vault entries from cache — no API call needed
+  const rebuildFromCache = useCallback((duration: YieldDuration, asset: AssetSymbol) => {
     const cache = rawCacheRef.current;
     if (!cache) return;
-    const entries = buildEntries(cache.data, cache.chainId, duration);
+    const entries = buildEntries(cache.data, cache.chainId, duration, asset);
+    // Preserve current vault selection by address if possible
+    const currentAddr = vaults[currentVaultIndex]?.address;
+    const preferred = NETWORKS[cache.chainId]?.preferredVaults?.[asset];
+
+    setVaults(entries.length > 0 ? entries : []);
+    setAllLoaded(true);
+
     if (entries.length > 0) {
-      // Preserve current vault selection by address
-      const currentAddr = vaults[currentVaultIndex]?.address;
-      setVaults(entries);
-      if (currentAddr) {
-        const idx = entries.findIndex((v) => v.address === currentAddr);
-        if (idx >= 0) setCurrentVaultIndex(idx);
-      }
+      const addrIdx = currentAddr ? entries.findIndex((v) => v.address === currentAddr) : -1;
+      const prefIdx = preferred ? entries.findIndex((v) => v.address.toLowerCase() === preferred.toLowerCase()) : -1;
+      setCurrentVaultIndex(addrIdx >= 0 ? addrIdx : prefIdx >= 0 ? prefIdx : 0);
+    } else {
+      setCurrentVaultIndex(0);
     }
   }, [buildEntries, vaults, currentVaultIndex]);
 
@@ -118,7 +123,7 @@ export function useMorphoVaults() {
     currentVaultIndex,
     allLoaded,
     loadVaults,
-    rebuildForDuration,
+    rebuildFromCache,
     selectVault,
     getCurators,
   };

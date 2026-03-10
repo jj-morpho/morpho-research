@@ -1,7 +1,7 @@
 "use client";
 
 import { NETWORKS, DURATION_OPTIONS } from "@/lib/constants";
-import type { VaultEntry, CuratorGroup, YieldDuration } from "@/lib/types";
+import type { VaultEntry, CuratorGroup, YieldDuration, AssetSymbol } from "@/lib/types";
 import VaultSelector from "./VaultSelector";
 
 interface YieldCardsProps {
@@ -13,6 +13,7 @@ interface YieldCardsProps {
   onSelectVault: (index: number) => void;
   aaveApy: string;
   duration: YieldDuration;
+  asset: AssetSymbol;
 }
 
 export default function YieldCards({
@@ -24,9 +25,11 @@ export default function YieldCards({
   onSelectVault,
   aaveApy,
   duration,
+  asset,
 }: YieldCardsProps) {
   const net = NETWORKS[chainId] || NETWORKS[1];
-  const aaveLink = `https://app.aave.com/reserve-overview/?underlyingAsset=${net.usdcAddress}&marketName=${net.aaveMarketName}`;
+  const assetAddr = net.assetAddresses[asset] || "";
+  const aaveLink = `https://app.aave.com/reserve-overview/?underlyingAsset=${assetAddr}&marketName=${net.aaveMarketName}`;
   const durationLabel = DURATION_OPTIONS.find((d) => d.key === duration)?.label;
   const apyLabel = duration === "instant" ? "APY" : `Avg ${durationLabel} APY`;
 
@@ -57,7 +60,7 @@ export default function YieldCards({
           <div className="protocol-name">
             Aave V3 <span className="chain-badge">{net.name}</span>
           </div>
-          <div className="vault-label">USDC Market</div>
+          <div className="vault-label">{asset} Market</div>
           <div className="apy">{aaveApy}</div>
           <div className="apy-label">{apyLabel}</div>
         </a>

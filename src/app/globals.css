@@ -146,6 +146,37 @@ body {
   color: #ffffff;
 }
 
+/* ── Asset Selector ── */
+.asset-selector {
+  display: flex;
+  gap: 4px;
+}
+
+.asset-btn {
+  border: 1px solid #e5e5ea;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  color: #86868b;
+  padding: 4px 10px;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.asset-btn:hover {
+  border-color: #c7c7cc;
+  color: #1d1d1f;
+}
+
+.asset-btn.active {
+  background: #1d1d1f;
+  border-color: #1d1d1f;
+  color: #ffffff;
+}
+
 /* ── Duration Selector ── */
 .duration-selector {
   display: flex;
