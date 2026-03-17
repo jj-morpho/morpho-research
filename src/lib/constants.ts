@@ -76,7 +76,7 @@ export const NETWORKS: Record<number, Network> = {
     },
     llamaChain: "Optimism",
     aaveMarketName: "proto_optimism_v3",
-    morphoApp: "optimism",
+    morphoApp: "opmainnet",
     assetAddresses: {
       USDC: "0x0b2c639c533813f4aa9d7837caf62653d097ff85",
       USDT: "0x94b008aa00579c1307b0ef2c499ad98a8ce58e58",
